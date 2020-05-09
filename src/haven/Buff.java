@@ -32,7 +32,7 @@ import java.util.*;
 
 import haven.ItemInfo.AttrCache;
 
-public class Buff extends Widget implements ItemInfo.ResOwner, Bufflist.Managed {
+public class Buff extends Widget implements ItemInfo.ResOwner {
     public static final Text.Foundry nfnd = new Text.Foundry(Text.dfont, 10);
     public static final Tex frame = Resource.loadtex("gfx/hud/buffs/frame");
     public static final Tex cframe = Resource.loadtex("gfx/hud/buffs/cframe");
@@ -240,11 +240,11 @@ public class Buff extends Widget implements ItemInfo.ResOwner, Bufflist.Managed 
         anims.clear();
         final Coord o = this.c;
         dest = true;
-        new NormAnim(0.35) {
+        new NormAnim(0.5) {
             public void ntick(double a) {
-                Buff.this.a = 255 - (int)(255 * a);
-                Buff.this.c = o.add(0, (int)(a * a * cframe.sz().y));
-                if(a == 1.0)
+                Buff.this.a = 255 - (int) (255 * a);
+                Buff.this.c = o.add(0, (int) (a * a * cframe.sz().y));
+                if (a == 1.0)
                     destroy();
             }
         };

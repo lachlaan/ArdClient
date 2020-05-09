@@ -27,6 +27,7 @@
 package haven;
 
 import com.jogamp.opengl.util.awt.Screenshot;
+import integrations.map.RemoteNavigation;
 
 import java.awt.Color;
 import java.awt.Cursor;
@@ -47,8 +48,9 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import javax.media.opengl.*;
 import javax.media.opengl.awt.*;
+import integrations.map.RemoteNavigation;
 
-public class HavenPanel extends GLCanvas implements Runnable, Console.Directory, UI.Context {
+public class HavenPanel extends GLCanvas implements Runnable, Console.Directory {
     UI ui;
     public static UI lui;
     boolean inited = false;
@@ -96,6 +98,7 @@ public class HavenPanel extends GLCanvas implements Runnable, Console.Directory,
             setContextCreationFlags(getContextCreationFlags() | GLContext.CTX_OPTION_DEBUG);
         setSize(this.w = w, this.h = h);
         newui(null);
+		RemoteNavigation.getInstance();
         initgl();
         if (Toolkit.getDefaultToolkit().getMaximumCursorColors() >= 256 || Config.hwcursor)
             cursmode = "awt";
@@ -177,10 +180,10 @@ public class HavenPanel extends GLCanvas implements Runnable, Console.Directory,
                             if (g.gc.glmajver >= 2)
                                 gl.glBlendEquationSeparate(GL.GL_FUNC_ADD, GL2.GL_MAX);
                             if (g.gc.havefsaa()) {
-                                /* Apparently, having sample
-                                 * buffers in the config enables
-                                 * multisampling by default on
-                                 * some systems. */
+                    /* Apparently, having sample
+                     * buffers in the config enables
+					 * multisampling by default on
+					 * some systems. */
                                 g.gl.glDisable(GL.GL_MULTISAMPLE);
                             }
                             GOut.checkerr(gl);
@@ -223,11 +226,6 @@ public class HavenPanel extends GLCanvas implements Runnable, Console.Directory,
             public void dispose(GLAutoDrawable d) {
             }
         });
-    }
-
-    @Override
-    public void setmousepos(Coord c) {
-
     }
 
     public static abstract class OrthoState extends GLState {
@@ -321,7 +319,7 @@ public class HavenPanel extends GLCanvas implements Runnable, Console.Directory,
     UI newui(Session sess) {
         if (ui != null)
             ui.destroy();
-        ui = new UI(this, new Coord(w, h), sess);
+        ui = new UI(new Coord(w, h), sess);
         ui.root.guprof = uprof;
         ui.root.grprof = rprof;
         ui.root.ggprof = gprof;
@@ -664,13 +662,13 @@ public class HavenPanel extends GLCanvas implements Runnable, Console.Directory,
                             uidle = ((double) twait) / ((double) (now - frames[ckf]));
                             break;
                             */
-                    {
-                        int i = 0, ckf = framep, twait = 0;
-                        for(; i < frames.length - 1; i++) {
-                            ckf = (ckf - 1 + frames.length) % frames.length;
-                            twait += waited[ckf];
-                            if(now - frames[ckf] > 1000)
-                                break;
+                            {
+                                int i = 0, ckf = framep, twait = 0;
+                                for(; i < frames.length - 1; i++) {
+                                    ckf = (ckf - 1 + frames.length) % frames.length;
+                                    twait += waited[ckf];
+                                    if(now - frames[ckf] > 1000)
+                                        break;
                         }
                         fps = (i * 1000) / (now - frames[ckf]);
                         uidle = ((double)twait) / ((double)(now - frames[ckf]));

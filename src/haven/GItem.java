@@ -233,10 +233,8 @@ public class GItem extends AWidget implements ItemInfo.SpriteOwner, GSprite.Owne
     }
 
     public List<ItemInfo> info() {
-        if (info == null && rawinfo != null) {
+        if (info == null)
             info = ItemInfo.buildinfo(this, rawinfo);
-            info.add(new ItemInfo.AdHoc(this, (Config.resinfo ? ("\n" + this.getres().name) : "")));
-        }
         return (info);
     }
 
@@ -333,21 +331,15 @@ public class GItem extends AWidget implements ItemInfo.SpriteOwner, GSprite.Owne
         }catch(Resource.Loading e){e.printStackTrace(); }
     }
     public Coord size() {
-        try {
-            Indir<Resource> res = getres().indir();
-            if(res.get() != null && res.get().layer(Resource.imgc) != null) {
-                Tex tex = res.get().layer(Resource.imgc).tex();
-                if(tex == null)
-                    return new Coord(1, 1);
-                else
-                    return tex.sz().div(30);
-            } else {
+        Indir<Resource> res = getres().indir();
+        if (res.get() != null && res.get().layer(Resource.imgc) != null) {
+            Tex tex = res.get().layer(Resource.imgc).tex();
+            if(tex == null)
                 return new Coord(1, 1);
-            }
-        } catch(Loading l) {
-
+            else
+                return tex.sz().div(30);
+        } else {
+            return new Coord(1, 1);
         }
-        return new Coord(1, 1);
-
     }
 }

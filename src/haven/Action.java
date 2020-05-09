@@ -31,13 +31,13 @@ public enum Action {
     TOGGLE_CURSOR(GameUI::toggleHand, "Toggle cursor item", "Hide/show item on a cursor Allows you to walk with item on cursor when hidden"),
     TOGGLE_STUDY(GameUI::toggleStudy, "Toggle study window"),
     TOGGLE_CAMERA(gui->gui.map.toggleCamera(),"Switches between camera views"),
-    //  FILTER(gui -> gui.filter.toggle(), "Show item filter"),
+ //  FILTER(gui -> gui.filter.toggle(), "Show item filter"),
     TOGGLE_GOB_INFO(GameUI::toggleTreeStage, "Display Tree/Crop Stages", "Display crop/tree growth and object health overlay"),
     TOGGLE_GOB_HITBOX(GameUI::toggleGobs, "Display hitboxes"),
     TOGGLE_DANGER_RADIUS(GameUI::toggleDangerRadius, "Toggles Mine/Animal Radii", "Toggles display of mine/animal danger radii"),
     TOGGLE_SAFE_RADIUS(GameUI::toggleSafeRadius,"Toggles Trough/Beehive Radii","Toggles between modes of displaying Trough/Beehive radii"),
     LOCAL_SCREENSHOT(GameUI::localScreenshot,"Take and save a local screenshot"),
-    //   TOGGLE_TILE_GRID(gui -> gui.map.togglegrid(), "Show tile grid"),
+ //   TOGGLE_TILE_GRID(gui -> gui.map.togglegrid(), "Show tile grid"),
     TOGGLE_TILE_CENTERING(GameUI::toggleGridCentering, "Toggle tile centering"),
     TOGGLE_DAYLIGHT(GameUI::toggleDaylight,"Toggles Nightvision"),
     TOGGLE_UI(GameUI::toggleUI,"Toggles the interface"),
@@ -66,26 +66,26 @@ public enum Action {
     TOGGLE_MAPSETTINGS(GameUI::toggleMapSettings,"Opens Map Options");
 
 
-
+    
     public final String name;
     private final Do action;
     public final String description;
-
+    
     Action(Do action, String name, String description) {
-        this.name = name;
-        this.action = action;
-        this.description = description;
+	this.name = name;
+	this.action = action;
+	this.description = description;
     }
-
+    
     Action(Do action, String name) {
-        this(action, name, null);
+	this(action, name, null);
     }
-
+    
     public void run(GameUI gui) {
-        action.run(gui);
+	action.run(gui);
     }
-
+    
     interface Do {
-        void run(GameUI gui);
+	void run(GameUI gui);
     }
 }

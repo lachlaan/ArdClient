@@ -1,11 +1,8 @@
 package haven.res.lib.tree;
 
 import haven.*;
-import haven.res.lib.leaves.FallingLeaves;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Random;
+import haven.res.lib.leaves.*;
+import java.util.*;
 
 public class Tree extends Sprite {
 	private final Location scale;

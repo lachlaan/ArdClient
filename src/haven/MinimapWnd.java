@@ -1,5 +1,8 @@
 package haven;
 
+import integrations.map.Navigation;
+import integrations.map.RemoteNavigation;
+import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.net.MalformedURLException;
@@ -8,6 +11,7 @@ import haven.Coord;
 import haven.IButton;
 import haven.LocalMiniMap;
 import haven.DefSettings;
+import java.util.Objects;
 
 
 public class MinimapWnd extends ResizableWnd {
@@ -73,33 +77,65 @@ public class MinimapWnd extends ResizableWnd {
         },vclaim.c.add(vclaim.sz.x+spacer,0));
         final IButton mapwnd = add(new IButton("gfx/hud/wndmap/btns/map", "Open Map", () -> gameui().toggleMap()), realm.c.add(realm.sz.x + spacer,0));
         final IButton geoloc = new IButton("gfx/hud/wndmap/btns/geoloc", "", "", "") {
+			private BufferedImage green = Resource.loadimg("gfx/hud/geoloc-green");
+            private BufferedImage red = Resource.loadimg("gfx/hud/geoloc-red");
+
+            private Coord2d locatedAC = null;
+            private Coord2d detectedAC = null;
+
             @Override
             public Object tooltip(Coord c, Widget prev) {
-                Pair<String, String> coords = getCurCoords();
-                if (coords != null)
-                    tooltip = Text.render(String.format("Current location: %s x %s", coords.a, coords.b));
-                else
+                if (this.locatedAC != null) {
+                    tooltip = Text.render("Located absolute coordinates: " + this.locatedAC.toGridCoordinate());
+                } else if (this.detectedAC != null) {
+                    tooltip = Text.render("Detected login absolute coordinates: " + this.detectedAC.toGridCoordinate());
+                } else {
                     tooltip = Text.render("Unable to determine your current location.");
+                }
                 return super.tooltip(c, prev);
             }
 
             @Override
             public void click() {
-                Pair<String, String> coords = getCurCoords();
-                if (coords != null) {
-                    try {
-                        WebBrowser.self.show(new URL(String.format("http://odditown.com/haven/map/#x=%s&y=%s&zoom=9", coords.a, coords.b)));
-                    } catch (WebBrowser.BrowserException e) {
-                        getparent(GameUI.class).error("Could not launch web browser.");
-                    } catch (MalformedURLException e) {
-                    }
-                } else {
-                    getparent(GameUI.class).error("Unable to determine your current location.");
+                Coord gridCoord = null;
+                if (this.locatedAC != null) {
+                    gridCoord = this.locatedAC.toGridCoordinate();
+                } else if (this.detectedAC != null) {
+                    gridCoord = this.detectedAC.toGridCoordinate();
+                }
+                if (gridCoord != null) {
+                    RemoteNavigation.getInstance().openBrowserMap(gridCoord);
                 }
             }
 
-            private Pair<String, String> getCurCoords() {
-                return minimap.cur != null ? Config.gridIdsMap.get(minimap.cur.grid.id) : null;
+            @Override
+            public void draw(GOut g) {
+                boolean redraw = false;
+                Coord2d locatedAC = Navigation.getAbsoluteCoordinates();
+                if (!Objects.equals(this.locatedAC, locatedAC)) {
+                    this.locatedAC = locatedAC;
+                    redraw = true;
+                }
+                Coord2d detectedAC = Navigation.getDetectedAbsoluteCoordinates();
+                if (!Objects.equals(this.detectedAC, detectedAC)) {
+                    this.detectedAC = detectedAC;
+                    redraw = true;
+                }
+                if (redraw) this.redraw();
+                super.draw(g);
+            }
+
+            @Override
+            public void draw(BufferedImage buf) {
+                Graphics2D g = (Graphics2D) buf.getGraphics();
+                if (this.locatedAC != null) {
+                    g.drawImage(green, 0, 0, null);
+                } else if (this.detectedAC != null) {
+                    g.drawImage(red, 0, 0, null);
+                } else {
+                    g.drawImage(up, 0, 0, null);
+                }
+                g.dispose();
             }
         };add(geoloc,mapwnd.c.add(mapwnd.sz.x + spacer,0));
         final IButton center = add(new IButton("gfx/hud/wndmap/btns/center", "Center map on player", () -> mm.center()),

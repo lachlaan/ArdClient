@@ -1,11 +1,8 @@
 package haven.res.lib.env;
 
-import haven.Coord3f;
-import haven.Glob;
-import haven.res.lib.globfx.GlobData;
-import haven.res.lib.globfx.GlobEffector;
-
-import java.util.Random;
+import haven.*;
+import java.util.*;
+import haven.res.lib.globfx.*;
 
 public class Environ extends GlobData {
     private final Random rnd = new Random();

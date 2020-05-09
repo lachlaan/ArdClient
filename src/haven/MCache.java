@@ -28,6 +28,10 @@ package haven;
 
 import haven.sloth.gfx.GridMesh;
 import haven.sloth.script.pathfinding.Tile;
+import integrations.map.Navigation;
+import integrations.map.RemoteNavigation;
+
+
 
 import java.lang.ref.Reference;
 import java.lang.ref.SoftReference;
@@ -122,6 +126,7 @@ public class MCache {
         private int olseq = -1;
         private final Cut cuts[];
         private Collection<Gob>[] fo = null;
+		public Navigation.GridType gridType = Navigation.GridType.UNKNOWN;
 
         private class Cut {
             MapMesh mesh;
@@ -165,6 +170,7 @@ public class MCache {
                 rl.add(spr, extra);
             }
         }
+
 
         public Grid(Coord gc) {
             this.gc = gc;
@@ -218,6 +224,7 @@ public class MCache {
                                     continue;
                             }
                             Gob g = new Flavobj(c.add(tc).mul(tilesz).add(tilesz.div(2)), a * 2 * Math.PI);
+                            // g.setattr(new ResDrawable(g, r, Message.nil));
                             g.setattr(new Flavdraw(g, r, Message.nil, set.flavobjmat));
                             Coord cc = c.div(cutsz);
                             fo[cc.x + (cc.y * cutn.x)].add(g);
@@ -398,28 +405,66 @@ public class MCache {
             }
             Message blob = new ZMessage(msg);
             id = blob.int64();
+			HashSet<Integer> waterTileIds = new HashSet<>();
+            HashSet<Integer> pavingTileIds = new HashSet<>();
+            int nilTileId = -1;
 	    while(true) {
                 int tileid = blob.uint8();
 		if(tileid == 255)
                     break;
                 String resnm = blob.string();
                 int resver = blob.uint16();
+				if (Navigation.UNDERGROUND_TILES.contains(resnm)) {
+                    gridType = Navigation.GridType.CAVE;
+                }
+                if (Navigation.WATER_TILES.contains(resnm)) {
+                    waterTileIds.add(tileid);
+                }
+                if (resnm.contains("gfx/tiles/paving/")) {
+                    pavingTileIds.add(tileid);
+                }
+                if (resnm.equals("gfx/tiles/nil")) {
+                    nilTileId = tileid;
+                }
                 nsets[tileid] = new Resource.Spec(Resource.remote(), resnm, resver);
 
+				
                 if (shallowater.matcher(resnm).matches()) {
                     id2tile[tileid] = Tile.SHALLOWWATER;
                 } else if (deepwater.matcher(resnm).matches()) {
                     id2tile[tileid] = Tile.DEEPWATER;
                 } else if (cave.matcher(resnm).matches()) {
                     id2tile[tileid] = Tile.CAVE;
+				}
             }
-            }
+			int waterTilesCount = 0;
+            int pavingTilesCount = 0;
+            int nilTilesCount = 0;
             for (int i = 0; i < tiles.length; i++) {
                 tiles[i] = blob.uint8();
 
                 //we can figure out shallow vs deep hitmap from this info, ridges will come later
                 hitmap[i] = id2tile[tiles[i]];
+				if (waterTileIds.contains(tiles[i])) {
+                    waterTilesCount++;
+                } else if (pavingTileIds.contains(tiles[i])) {
+                    pavingTilesCount++;
+                } else if (tiles[i] == nilTileId) {
+                    nilTilesCount++;
+                }
             }
+            if (gridType == Navigation.GridType.UNKNOWN) {
+                if (waterTilesCount == cmaps.x * cmaps.y) {
+                    gridType = Navigation.GridType.UNKNOWN_WATER;
+                } else if (pavingTilesCount == cmaps.x * cmaps.y) {
+                    gridType = Navigation.GridType.UNKNOWN_PAVING;
+                } else if (nilTilesCount > (cmaps.x * cmaps.y) * 0.9d) {
+                    gridType = Navigation.GridType.HOUSE;
+                } else {
+                    gridType = Navigation.GridType.SURFACE;
+                }
+            }
+            Navigation.receiveGridData(gc, id, gridType);
 	    for(int i = 0; i < z.length; i++)
                 z[i] = blob.int16();
 	    for(int i = 0; i < ol.length; i++)
@@ -460,6 +505,7 @@ public class MCache {
                 }
             }
             invalidate();
+			RemoteNavigation.getInstance().receiveGrid(this);
             seq++;
         }
     }
@@ -501,6 +547,7 @@ public class MCache {
             trim(ul, lr);
 	} else if(type == 2) {
             trimall();
+			Navigation.mapdataReset();
         }
     }
 

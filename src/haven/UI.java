@@ -53,7 +53,6 @@ public class UI {
     public Widget mouseon;
     public Console cons = new WidgetConsole();
     private Collection<AfterDraw> afterdraws = new LinkedList<AfterDraw>();
-    private final Context uictx;
     public final ActAudio audio = new ActAudio();
     public int beltWndId = -1;
 	public GameUI gui;
@@ -70,10 +69,6 @@ public class UI {
 
     public interface Runner {
         public Session run(UI ui) throws InterruptedException;
-    }
-
-    public interface Context {
-        void setmousepos(Coord c);
     }
 
     public interface AfterDraw {
@@ -120,8 +115,7 @@ public class UI {
         }
     }
 
-    public UI(Context uictx, Coord sz, Session sess) {
-        this.uictx = uictx;
+    public UI(Coord sz, Session sess) {
         root = new RootWidget(this, sz);
         widgets.put(0, root);
         rwidgets.put(root, 0);
@@ -537,10 +531,6 @@ public class UI {
         root.mousemove(c);
     }
 
-    public void setmousepos(Coord c) {
-        uictx.setmousepos(c);
-    }
-
     public void mousewheel(MouseEvent ev, Coord c, int amount) {
         setmods(ev);
         lcc = mc = c;
@@ -551,20 +541,6 @@ public class UI {
         }
         }
         root.mousewheel(c, amount);
-    }
-
-    public Resource getcurs(Coord c) {
-        // should synchronize instead, but we are not looking for proper ways here!
-        // thus, just iterate over an array copy to avoid concurrent modification exception
-        Grab[] mousegrabCopy = mousegrab.toArray(new Grab[mousegrab.size()]);
-        for(Grab g : mousegrabCopy) {
-            if (g.wdg == null)
-                continue;
-            Resource ret = g.wdg.getcurs(wdgxlate(c, g.wdg));
-            if(ret != null)
-                return(ret);
-        }
-        return(root.getcurs(c));
     }
 
     public static int modflags(InputEvent ev) {

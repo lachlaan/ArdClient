@@ -340,7 +340,6 @@ public class CharWnd extends Window {
     public static class Constipations extends Listbox<Constipations.El> {
         public static final Color hilit = new Color(255, 255, 0, 48);
         public static final Text.Foundry elf = attrf;
-        public static final int elh = elf.height() + 2;
         public static final Convolution tflt = new Hanning(1);
         public static final Color buffed = new Color(160, 255, 160), full = new Color(250, 230, 64), none = new Color(250, 19, 43);
         public final List<El> els = new ArrayList<El>();
@@ -350,14 +349,18 @@ public class CharWnd extends Window {
 	    return (a > 1.0)?buffed:Utils.blendcol(none, full, a);
 	}
 
-        public class El {
-            public final ResData t;
+        public static class El {
+            public static final int h = elf.height() + 2;
+            public final Indir<Resource> t;
             public double a;
             private Tex tt, at;
-	        private BufferedImage tip;
+	    private BufferedImage tip;
             private boolean hl;
 
-            public El(ResData t, double a) {this.t = t; this.a = a;}
+            public El(Indir<Resource> t, double a) {
+                this.t = t;
+                this.a = a;
+            }
 
             public void update(double a) {
                 this.a = a;
@@ -366,14 +369,13 @@ public class CharWnd extends Window {
 
             public Tex tt() {
                 if (tt == null) {
-                    ItemSpec spec = new ItemSpec(OwnerContext.uictx.curry(ui), t, null);
-                    BufferedImage img = spec.image();
-                    String nm = spec.name();
+                    BufferedImage img = t.get().layer(Resource.imgc).img;
+                    String nm = t.get().layer(Resource.tooltip).t;
                     Text rnm = elf.render(nm);
-                    BufferedImage buf = TexI.mkbuf(new Coord(elh + 5 + rnm.sz().x, elh));
+                    BufferedImage buf = TexI.mkbuf(new Coord(El.h + 5 + rnm.sz().x, h));
                     Graphics g = buf.getGraphics();
-                    g.drawImage(convolvedown(img, new Coord(elh, elh), tflt), 0, 0, null);
-                    g.drawImage(rnm.img, elh + 5, ((elh - rnm.sz().y) / 2) + 1, null);
+                    g.drawImage(convolvedown(img, new Coord(h, h), tflt), 0, 0, null);
+                    g.drawImage(rnm.img, h + 5, ((h - rnm.sz().y) / 2) + 1, null);
                     g.dispose();
                     tt = new TexI(buf);
                 }
@@ -393,22 +395,22 @@ public class CharWnd extends Window {
 
         public void draw(GOut g) {
             WItem.ItemTip tip = null;
-            if(ui.lasttip instanceof WItem.ItemTip)
-                tip = (WItem.ItemTip)ui.lasttip;
-            if(tip != lasttip) {
-                for(El el : els)
+            if (ui.lasttip instanceof WItem.ItemTip)
+                tip = (WItem.ItemTip) ui.lasttip;
+            if (tip != lasttip) {
+                for (El el : els)
                     el.hl = false;
                 FoodInfo finf;
                 try {
-                    finf = (tip == null)?null:ItemInfo.find(FoodInfo.class, tip.item().info());
-                } catch(Loading l) {
+                    finf = (tip == null) ? null : ItemInfo.find(FoodInfo.class, tip.item().info());
+                } catch (Loading l) {
                     finf = null;
                 }
-                if(finf != null) {
-                    for(int i = 0; i < els.size(); i++) {
+                if (finf != null) {
+                    for (int i = 0; i < els.size(); i++) {
                         El el = els.get(i);
-                        for(int o = 0; o < finf.types.length; o++) {
-                            if(finf.types[o] == i) {
+                        for (int o = 0; o < finf.types.length; o++) {
+                            if (finf.types[o] == i) {
                                 el.hl = true;
                                 break;
                             }
@@ -419,7 +421,6 @@ public class CharWnd extends Window {
             }
             super.draw(g);
         }
-
 
         public static final Comparator<El> ecmp = new Comparator<El>() {
             public int compare(El a, El b) {
@@ -432,7 +433,7 @@ public class CharWnd extends Window {
         };
 
         public Constipations(int w, int h) {
-            super(w, h, elh);
+            super(w, h, El.h);
         }
 
         protected void drawbg(GOut g) {
@@ -447,36 +448,37 @@ public class CharWnd extends Window {
         }
 
         protected void drawitem(GOut g, El el, int idx) {
-            g.chcolor(el.hl?hilit:(((idx % 2) == 0)?every:other));
+            g.chcolor(el.hl ? hilit : (((idx % 2) == 0) ? every : other));
             g.frect(Coord.z, g.sz);
             g.chcolor();
             try {
                 g.image(el.tt(), Coord.z);
-            } catch(Loading e) {}
+            } catch (Loading e) {
+            }
             Tex at = el.at();
-            g.image(at, new Coord(sz.x - at.sz().x - sb.sz.x, (elh - at.sz().y) / 2));
+            g.image(at, new Coord(sz.x - at.sz().x - sb.sz.x, (El.h - at.sz().y) / 2));
         }
-
 
         private void order() {
             int n = els.size();
             order = new Integer[n];
-            for(int i = 0; i < n; i++)
+            for (int i = 0; i < n; i++)
                 order[i] = i;
             Arrays.sort(order, new Comparator<Integer>() {
                 public int compare(Integer a, Integer b) {
-                    return(ecmp.compare(els.get(a), els.get(b)));
+                    return (ecmp.compare(els.get(a), els.get(b)));
                 }
             });
         }
 
-        public void update(ResData t, double a) {
-            prev: {
-                for(Iterator<El> i = els.iterator(); i.hasNext();) {
+        public void update(Indir<Resource> t, double a) {
+            prev:
+            {
+                for (Iterator<El> i = els.iterator(); i.hasNext(); ) {
                     El el = i.next();
-                    if(!Utils.eq(el.t, t))
+                    if (el.t != t)
                         continue;
-                    if(a == 1.0)
+                    if (a == 1.0)
                         i.remove();
                     else
                         el.update(a);
@@ -486,7 +488,6 @@ public class CharWnd extends Window {
             }
             order();
         }
-
 
         protected void itemclick(El item, int button) {
         }
@@ -2610,9 +2611,7 @@ public class CharWnd extends Window {
         } else if (nm == "const") {
             int a = 0;
             while (a < args.length) {
-                ResData t = new ResData(ui.sess.getres((Integer)args[a++]), MessageBuf.nil);
-                if(args[a] instanceof byte[])
-                    t.sdt = new MessageBuf((byte[])args[a++]);
+                Indir<Resource> t = ui.sess.getres((Integer) args[a++]);
                 double m = ((Number) args[a++]).doubleValue();
                 ui.sess.character.constipation.update(t, m);
                 cons.update(t, m);

@@ -26,7 +26,6 @@
 
 package haven;
 
-import haven.purus.Iconfinder;
 import haven.purus.pbot.PBotUtils;
 import haven.resutil.Ridges;
 import haven.sloth.gob.Type;
@@ -40,12 +39,12 @@ import static haven.MCache.cmaps;
 import static haven.MCache.tilesz;
 import static haven.OCache.posres;
 
-public class
-LocalMiniMap extends Widget {
+public class LocalMiniMap extends Widget {
     private static final Tex resize = Resource.loadtex("gfx/hud/wndmap/lg/resize");
-    private static final Tex gridblue = Resource.loadtex("gfx/hud/mmap/gridblue");
-    private static final Tex gridred = Resource.loadtex("gfx/hud/mmap/gridred");
-    private HashMap<BufferedImage, Color> simple_textures = new HashMap<>();
+    // private static final Tex gridblue = Resource.loadtex("gfx/hud/mmap/gridblue");
+    // private static final Tex gridred = Resource.loadtex("gfx/hud/mmap/gridred");
+    private static final Tex gridwhite = Resource.loadtex("gfx/hud/mmap/gridwhite");
+    private static final Tex gridblack = Resource.loadtex("gfx/hud/mmap/gridblack");
     private String biome;
    // public Tex biometex;
     public final MapView mv;
@@ -55,9 +54,6 @@ LocalMiniMap extends Widget {
     private UI.Grab dragging;
     private Coord doff = Coord.z;
     private Coord delta = Coord.z;
-    private static float[] zArray = {.5f, .75f, 1f, 2f, 3f, 4f};
-    private static float[] ziArray = {.8f, .9f, 1f, 1f, 1f, 1f};
-    private int zIndex = 2;
     private boolean showGrid = DefSettings.MMSHOWGRID.get();
     private boolean showView = DefSettings.MMSHOWVIEW.get();
 
@@ -66,6 +62,9 @@ LocalMiniMap extends Widget {
 
 	private float zoom = 1f; //zoom multiplier
 	private float iconZoom = 1f; //zoom multiplier for minimap icons
+    private static float[] zArray = {.5f, .75f, 1f, 2f, 3f, 4f};
+    private static float[] ziArray = {.8f, .9f, 1f, 1f, 1f, 1f};
+    private int zIndex = 2;
 
     private final Map<Coord, Tex> maptiles = new LinkedHashMap<Coord, Tex>(100, 0.75f, false) {
         @Override
@@ -132,205 +131,64 @@ LocalMiniMap extends Widget {
         MCache m = ui.sess.glob.map;
         BufferedImage buf = TexI.mkbuf(sz);
         Coord c = new Coord();
-        if(Config.simplemap){
-            for (c.y = 0; c.y < sz.y; c.y++) {
-                for (c.x = 0; c.x < sz.x; c.x++) {
-                    int t = m.gettile(ul.add(c));
-                    BufferedImage tex = tileimg(t, texes);
-                    int rgb = 0xFF000000;
-                    if (tex != null)
-                    {
-                        rgb = tex.getRGB(Utils.floormod(c.x + ul.x, tex.getWidth()),
-                                Utils.floormod(c.y + ul.y, tex.getHeight()));
-                        int mixrgb = tex.getRGB(20, 45);
 
-                        //color post-processing
-                        Color mixtempColor = new Color(mixrgb, true);
-                        Color tempColor = new Color(rgb, true);
+        for (c.y = 0; c.y < sz.y; c.y++) {
+            for (c.x = 0; c.x < sz.x; c.x++) {
+                int t = m.gettile(ul.add(c));
+                BufferedImage tex = tileimg(t, texes);
+                int rgb = 0xFF000000;
+                if (tex != null)
+                {
+                    rgb = tex.getRGB(Utils.floormod(c.x + ul.x, tex.getWidth()),
+                        Utils.floormod(c.y + ul.y, tex.getHeight()));
+                    int mixrgb = tex.getRGB(20, 45);
+    
+                    //color post-processing
+                    Color mixtempColor = new Color(mixrgb, true);
+                    Color tempColor = new Color(rgb, true);
 
-                        tempColor = Utils.blendcol(tempColor, mixtempColor, 0.75f);
-                        try {
-                            if ((m.gettile(ul.add(c).add(-1, 0)) > t) ||
-                                    (m.gettile(ul.add(c).add(1, 0)) > t) ||
-                                    (m.gettile(ul.add(c).add(0, -1)) > t) ||
-                                    (m.gettile(ul.add(c).add(0, 1)) > t)) {
-                                tempColor = Utils.blendcol(tempColor, Color.BLACK, 0.25f);
-                            }
-                            else if ((m.gettile(ul.add(c).add(-1, -1)) > t) ||
-                                    (m.gettile(ul.add(c).add(-1, 1)) > t) ||
-                                    (m.gettile(ul.add(c).add(1, -1)) > t) ||
-                                    (m.gettile(ul.add(c).add(1, 1)) > t)) {
-                                tempColor = Utils.blendcol(tempColor, Color.BLACK, 0.12f);
-                            }
-                        } catch (Exception e) { }
-                        rgb = tempColor.getRGB();
-                    }
-                    buf.setRGB(c.x, c.y, rgb);
-                }
-            }
-
-            for (c.y = 1; c.y < sz.y - 1; c.y++) {
-                for (c.x = 1; c.x < sz.x - 1; c.x++) {
-                    try {
-                        int t = m.gettile(ul.add(c));
-                        Tiler tl = m.tiler(t);
-                        if (tl instanceof Ridges.RidgeTile) {
-                            if (Ridges.brokenp(m, ul.add(c))) {
-                                for (int y = c.y - 1; y <= c.y + 1; y++) {
-                                    for (int x = c.x - 1; x <= c.x + 1; x++) {
-                                        Color cc = new Color(buf.getRGB(x, y));
-                                        buf.setRGB(x, y, Utils.blendcol(cc, Color.BLACK, ((x == c.x) && (y == c.y)) ? 0.85f : 0.2f).getRGB());
-                                    }
-                                }
-                            }
-                        }
-                    } catch (Exception e) {
-                    }
-                }
-            }
-        } else if(Config.rawrzmap){
-            for (c.y = 0; c.y < sz.y; c.y++) {
-                for (c.x = 0; c.x < sz.x; c.x++) {
-                    int t = m.gettile(ul.add(c));
-                    if (Config.rawrzmap){
-                        Color simple_color = simple_tile_img(t, texes);
-
-                        if(simple_color != null)
-                            buf.setRGB(c.x, c.y, simple_color.getRGB());
-                        else
-                            buf.setRGB(c.x, c.y, 0);
-                    } else {
-                        BufferedImage tex = tileimg(t, texes);
-                        int rgb = 0;
-                        if (tex != null)
-                            rgb = tex.getRGB(Utils.floormod(c.x + ul.x, tex.getWidth()),
-                                    Utils.floormod(c.y + ul.y, tex.getHeight()));
-                        buf.setRGB(c.x, c.y, rgb);
-                    }
-
-                    try {
-                        if (!Config.disableBlackOutLinesOnMap) {
-                            if ((m.gettile(ul.add(c).add(-1, 0)) > t) ||
-                                    (m.gettile(ul.add(c).add(1, 0)) > t) ||
-                                    (m.gettile(ul.add(c).add(0, -1)) > t) ||
-                                    (m.gettile(ul.add(c).add(0, 1)) > t))
-                                buf.setRGB(c.x, c.y, Color.BLACK.getRGB());
-                        }
-                    } catch (Exception e) {
-                    }
-                }
-            }
-
-            for (c.y = 1; c.y < sz.y - 1; c.y++) {
-                for (c.x = 1; c.x < sz.x - 1; c.x++) {
-                    try {
-                        int t = m.gettile(ul.add(c));
-                        Tiler tl = m.tiler(t);
-                        if (tl instanceof Ridges.RidgeTile) {
-                            if (Ridges.brokenp(m, ul.add(c))) {
-                                for (int y = c.y - 1; y <= c.y + 1; y++) {
-                                    for (int x = c.x - 1; x <= c.x + 1; x++) {
-                                        Color cc = new Color(buf.getRGB(x, y));
-                                        buf.setRGB(x, y, Utils.blendcol(cc, Color.BLACK, ((x == c.x) && (y == c.y)) ? 1 : 0.1).getRGB());
-                                    }
-                                }
-                            }
-                        }
-                    } catch (Exception e) {
-                    }
-                }
-            }
-        } else {
-
-            for (c.y = 0; c.y < sz.y; c.y++) {
-                for (c.x = 0; c.x < sz.x; c.x++) {
-                    int t = m.gettile(ul.add(c));
-                    BufferedImage tex = tileimg(t, texes);
-                    int rgb = 0;
-                    if (tex != null)
-                        rgb = tex.getRGB(Utils.floormod(c.x + ul.x, tex.getWidth()),
-                                Utils.floormod(c.y + ul.y, tex.getHeight()));
-                    buf.setRGB(c.x, c.y, rgb);
-
+                    tempColor = Utils.blendcol(tempColor, mixtempColor, 0.75f);
                     try {
                         if ((m.gettile(ul.add(c).add(-1, 0)) > t) ||
-                                (m.gettile(ul.add(c).add(1, 0)) > t) ||
-                                (m.gettile(ul.add(c).add(0, -1)) > t) ||
-                                (m.gettile(ul.add(c).add(0, 1)) > t))
-                            buf.setRGB(c.x, c.y, Color.BLACK.getRGB());
-                    } catch (Exception e) {
-                    }
+                            (m.gettile(ul.add(c).add(1, 0)) > t) ||
+                            (m.gettile(ul.add(c).add(0, -1)) > t) ||
+                            (m.gettile(ul.add(c).add(0, 1)) > t)) {
+                                tempColor = Utils.blendcol(tempColor, Color.BLACK, 0.25f);
+                            }
+                        else if ((m.gettile(ul.add(c).add(-1, -1)) > t) ||
+                            (m.gettile(ul.add(c).add(-1, 1)) > t) ||
+                            (m.gettile(ul.add(c).add(1, -1)) > t) ||
+                            (m.gettile(ul.add(c).add(1, 1)) > t)) {
+                                tempColor = Utils.blendcol(tempColor, Color.BLACK, 0.12f);
+                            }  
+                    } catch (Exception e) { }
+                    rgb = tempColor.getRGB();
                 }
+                buf.setRGB(c.x, c.y, rgb);
             }
+        }
 
-            for (c.y = 1; c.y < sz.y - 1; c.y++) {
-                for (c.x = 1; c.x < sz.x - 1; c.x++) {
-                    try {
-                        int t = m.gettile(ul.add(c));
-                        Tiler tl = m.tiler(t);
-                        if (tl instanceof Ridges.RidgeTile) {
-                            if (Ridges.brokenp(m, ul.add(c))) {
-                                for (int y = c.y - 1; y <= c.y + 1; y++) {
-                                    for (int x = c.x - 1; x <= c.x + 1; x++) {
-                                        Color cc = new Color(buf.getRGB(x, y));
-                                        buf.setRGB(x, y, Utils.blendcol(cc, Color.BLACK, ((x == c.x) && (y == c.y)) ? 1 : 0.1).getRGB());
-                                    }
+        for (c.y = 1; c.y < sz.y - 1; c.y++) {
+            for (c.x = 1; c.x < sz.x - 1; c.x++) {
+                try {
+                    int t = m.gettile(ul.add(c));
+                    Tiler tl = m.tiler(t);
+                    if (tl instanceof Ridges.RidgeTile) {
+                        if (Ridges.brokenp(m, ul.add(c))) {
+                            for (int y = c.y - 1; y <= c.y + 1; y++) {
+                                for (int x = c.x - 1; x <= c.x + 1; x++) {
+                                    Color cc = new Color(buf.getRGB(x, y));
+                                    buf.setRGB(x, y, Utils.blendcol(cc, Color.BLACK, ((x == c.x) && (y == c.y)) ? 0.85f : 0.2f).getRGB());
                                 }
                             }
                         }
-                    } catch (Exception e) {
                     }
+                } catch (Exception e) {
                 }
-            } //Laziest implementation Ardennes would be proud
+            }
         }
 
         return new TexI(buf);
-    }
-
-    @SuppressWarnings("Duplicates")
-    private Color simple_tile_img(int t, BufferedImage[] texes) {
-        int sumr = 0, sumg = 0, sumb = 0;
-
-        BufferedImage img = texes[t];
-
-        if (!simple_textures.containsKey(img)){
-            Resource r = ui.sess.glob.map.tilesetr(t);
-            if (r == null)
-                return (null);
-            Resource.Image ir = r.layer(Resource.imgc);
-            if (ir == null)
-                return (null);
-            img = ir.img;
-            texes[t] = img;
-
-            for(int x = 0; x < img.getWidth(); x++){
-                for(int y = 0; y < img.getHeight(); y++){
-                    int rgb = img.getRGB(x, y);
-
-                    int red = (rgb >> 16) & 0xFF;
-                    int green = (rgb >> 8) & 0xFF;
-                    int blue = rgb & 0xFF;
-
-                    sumr += red;
-                    sumg += green;
-                    sumb += blue;
-                }
-            }
-
-            int num = img.getWidth() * img.getHeight();
-            simple_textures.put(img, new Color(sumr / num, sumg / num, sumb / num));
-        }
-
-
-//        int t = m.gettile(ul.add(c));
-//        BufferedImage tex = tileimg(t, texes);
-//        int rgb = 0;
-//        if (tex != null)
-//            rgb = tex.getRGB(Utils.floormod(c.x + ul.x, tex.getWidth()),
-//                    Utils.floormod(c.y + ul.y, tex.getHeight()));
-//        buf.setRGB(c.x, c.y, rgb);
-
-        return simple_textures.get(img);
     }
 
 
@@ -381,45 +239,16 @@ LocalMiniMap extends Widget {
                     String basename = res.basename();
                     if (gob.type == Type.BOULDER) {
                         CheckListboxItem itm = Config.boulders.get(basename.substring(0, basename.length() - 1));
-                        if (itm != null && itm.selected) {
-                            if(Iconfinder.icons.containsKey(basename.substring(0, basename.length() - 1))) {
-                                try {
-                                    Tex tex = Resource.remote().loadwait(Iconfinder.icons.get(basename.substring(0, basename.length() - 1))).layer(Resource.imgc).tex();
-                                    g.image(tex, p2c(gob.rc).sub(tex.sz().mul(iconZoom).div(4)).add(delta), tex.dim.mul(iconZoom/2));
-                                } catch(Resource.Loading l) {
-                                }
-                            } else {
-                                g.image(bldricn, p2c(gob.rc).add(delta).sub(bldricn.sz().div(2)));
-                            }
-                        }
+                        if (itm != null && itm.selected)
+                            g.image(bldricn, p2c(gob.rc).add(delta).sub(bldricn.sz().div(2)));
                     } else if (gob.type == Type.BUSH) {
                         CheckListboxItem itm = Config.bushes.get(basename);
-                        if (itm != null && itm.selected) {
-                            if(Iconfinder.icons.containsKey(basename)) {
-                                try {
-                                    Tex tex = Resource.remote().loadwait(Iconfinder.icons.get(basename)).layer(Resource.imgc).tex();
-                                    g.image(tex, p2c(gob.rc).sub(tex.sz().mul(iconZoom).div(4)).add(delta), tex.dim.mul(iconZoom/2));
-                                } catch(Resource.Loading l) {
-
-                                }
-                            } else {
-                                g.image(bushicn, p2c(gob.rc).add(delta).sub(bldricn.sz().div(2)));
-                            }
-                        }
+                        if (itm != null && itm.selected)
+                            g.image(bushicn, p2c(gob.rc).add(delta).sub(bushicn.sz().div(2)));
                     } else if (gob.type == Type.TREE) {
                         CheckListboxItem itm = Config.trees.get(basename);
-                        if (itm != null && itm.selected) {
-                            if(Iconfinder.icons.containsKey(basename)) {
-                                try {
-                                    Tex tex = Resource.remote().loadwait(Iconfinder.icons.get(basename)).layer(Resource.imgc).tex();
-                                    g.image(tex, p2c(gob.rc).sub(tex.sz().mul(iconZoom).div(4)).add(delta), tex.dim.mul(iconZoom/2));
-                                } catch(Resource.Loading l) {
-
-                                }
-                            } else {
-                                g.image(treeicn, p2c(gob.rc).add(delta).sub(bldricn.sz().div(2)));
-                            }
-                        }
+                        if (itm != null && itm.selected)
+                            g.image(treeicn, p2c(gob.rc).add(delta).sub(treeicn.sz().div(2)));
                     }
                     else if(gob.type == Type.ROAD && Config.showroadmidpoint){
                         g.image(roadicn, p2c(gob.rc).sub(roadicn.sz().div(2)).add(delta));
@@ -431,7 +260,7 @@ LocalMiniMap extends Widget {
                         int stage = 0;
                         if(gob.getattr(ResDrawable.class) != null)
                             stage = gob.getattr(ResDrawable.class).sdt.peekrbuf(0);
-                        if(stage == 10 || stage == 14)
+                        if(stage == 10 || stage == 14 || stage == 16)
                         g.image(dooricn, p2c(gob.rc).sub(dooricn.sz().div(2)).add(delta));
                     }
 
@@ -709,7 +538,8 @@ LocalMiniMap extends Widget {
                             Coord mtc = new Coord(mtcx, mtcy);
                             g.image(mt, mtc, ts);
                             if (Config.mapshowgrid)
-                                g.image(gridred, mtc, ts);
+                                // g.image(gridred, mtc, ts);
+                                g.image(gridwhite, mtc, ts);
                         }
                     }
                 }
@@ -720,7 +550,8 @@ LocalMiniMap extends Widget {
             if (Config.mapshowviewdist) {
                 Gob player = mv.player();
                 if (player != null)
-                    g.image(gridblue, p2c(player.rc).add(delta).sub((int)(44 * zoom), (int)(44 * zoom)), gridblue.dim.mul(zoom));
+                    // g.image(gridblue, p2c(player.rc).add(delta).sub((int)(44 * zoom), (int)(44 * zoom)), gridblue.dim.mul(zoom));
+                    g.image(gridblack, p2c(player.rc).add(delta).sub((int)(64 * zoom), (int)(64 * zoom)), gridblack.dim.mul(zoom));
             }
         }
         drawicons(g);
@@ -767,7 +598,6 @@ LocalMiniMap extends Widget {
         }
         if(MinimapWnd.biometex!=null)
             g.image(MinimapWnd.biometex, Coord.z);
-        //Improve minimap player markers slightly commit skip
     }
 
     public void center() {
@@ -835,23 +665,13 @@ LocalMiniMap extends Widget {
     }
 
     public boolean mousewheel(Coord c, int amount) {
-        if(!Config.mapscale){
-            if (amount > 0 && zoom > 1)
-                zoom = Math.round(zoom * 100 - 20) / 100f;
-            else if (amount < 0 && zoom < 3)
-                zoom = Math.round(zoom * 100 + 20) / 100f;
-
-            iconZoom = Math.round((zoom - 1) * 100 / 2) / 100f + 1;
-
+        if (amount == 0) {
+            return false;
         } else {
-            if (amount == 0) {
-                return false;
-            } else {
-                zIndex = Math.max(0, Math.min(zIndex - amount, zArray.length-1));
-            }
-            zoom = zArray[zIndex];
-            iconZoom = ziArray[zIndex];
+            zIndex = Math.max(0, Math.min(zIndex - amount, zArray.length-1));
         }
-        return true;
+    	zoom = zArray[zIndex];
+        iconZoom = ziArray[zIndex];
+    	return true;
     }
 }

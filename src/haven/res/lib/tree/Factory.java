@@ -1,9 +1,8 @@
 package haven.res.lib.tree;
 
 import haven.*;
-
-import java.util.ArrayList;
-import java.util.Collection;
+import haven.res.lib.leaves.*;
+import java.util.*;
 
 public class Factory implements Sprite.Factory {
 	public LeafSpec leaves = null;

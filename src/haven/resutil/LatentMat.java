@@ -37,31 +37,31 @@ public class LatentMat extends GLState.Abstract {
     public final String id, act;
 
     public LatentMat(GLState mat, String id) {
-        this.mat = mat;
-        this.id = id;
-        this.act = null;
+	this.mat = mat;
+	this.id = id;
+	this.act = null;
     }
 
     public LatentMat(String act) {
-        this.mat = null;
-        this.id = null;
-        this.act = act;
+	this.mat = null;
+	this.id = null;
+	this.act = act;
     }
 
     public void prep(Buffer buf) {
-        if((mat != null) && (id != null))
-            buf.put(slot, this);
-        if(act != null) {
-            LatentMat cur = buf.get(slot);
-            if((cur != null) && (cur.id == act))
-                cur.mat.prep(buf);
-        }
+	if((mat != null) && (id != null))
+	    buf.put(slot, this);
+	if(act != null) {
+	    LatentMat cur = buf.get(slot);
+	    if((cur != null) && (cur.id == act))
+		cur.mat.prep(buf);
+	}
     }
 
     @Material.ResName("latent")
     public static class $latent implements Material.ResCons {
-        public GLState cons(Resource res, Object... args) {
-            return(new LatentMat(((String)args[0]).intern()));
-        }
+	public GLState cons(Resource res, Object... args) {
+	    return(new LatentMat(((String)args[0]).intern()));
+	}
     }
 }

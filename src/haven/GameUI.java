@@ -29,7 +29,7 @@ package haven;
 import static haven.Action.*;
 import static haven.Action.TOGGLE_KIN_LIST;
 import static haven.Action.TOGGLE_OPTIONS;
-
+import static haven.Inventory.invsq;
 import haven.automation.*;
 import haven.automation.Discord;
 import haven.livestock.LivestockManager;
@@ -40,6 +40,7 @@ import haven.purus.pbot.PBotScriptlist;
 import haven.purus.pbot.PBotScriptlistOld;
 import haven.purus.pbot.PBotUtils;
 import haven.resutil.FoodInfo;
+import integrations.map.RemoteNavigation;
 import static haven.KeyBinder.*;
 import java.awt.*;
 import java.lang.ref.WeakReference;
@@ -47,12 +48,16 @@ import java.util.*;
 import java.awt.event.KeyEvent;
 import java.awt.image.WritableRaster;
 import java.util.List;
-
+import haven.MapPointer;
 import haven.sloth.gob.Mark;
 import haven.sloth.gui.DeletedManager;
 import haven.sloth.gui.HiddenManager;
 import haven.sloth.gui.HighlightManager;
 import haven.sloth.gui.SoundManager;
+import haven.GobSpawner;
+import haven.sloth.script.pathfinding.GobHitmap;
+
+import static haven.Inventory.invsq;
 
 public class GameUI extends ConsoleHost implements Console.Directory {
     public static final Text.Foundry msgfoundry = new Text.Foundry(Text.dfont, Text.cfg.msg);
@@ -185,9 +190,18 @@ public class GameUI extends ConsoleHost implements Console.Directory {
             @Override
             public void draw(GOut g) {
                 if (Config.showservertime) {
-                    Tex time = ui.sess.glob.servertimetex;
-                    if (time != null)
-                        g.image(time, new Coord(360 / 2 - time.sz().x / 2, 0));
+                    Tex mtime = ui.sess.glob.mservertimetex;
+                    Tex ltime = ui.sess.glob.lservertimetex;
+                    Tex rtime = ui.sess.glob.rservertimetex;
+                    Tex btime = ui.sess.glob.bservertimetex;
+                    if (mtime != null)
+                        g.image(mtime, new Coord(360 / 2 - mtime.sz().x / 2, 0));
+                    if (ltime != null)
+                        g.image(ltime, new Coord(360 / 2 - mtime.sz().x / 2 - 12 - ltime.sz().x, 0));
+                    if (rtime != null)
+                        g.image(rtime, new Coord(360 / 2 + mtime.sz().x / 2 + 12, 0));
+                    if (btime != null)
+                        g.image(btime, new Coord(360 / 2 - btime.sz().x / 2, 16));
                 }
             }
         }, new Coord(HavenPanel.w / 2 - 360 / 2, umpanel.sz.y));
@@ -243,7 +257,7 @@ public class GameUI extends ConsoleHost implements Console.Directory {
             StringBuilder buf = new StringBuilder();
 
             public void write(char[] src, int off, int len) {
-                List<String> lines = new ArrayList<>();
+		    List<String> lines = new ArrayList<>();
                 synchronized(this) {
                     buf.append(src, off, len);
                     int p;
@@ -256,8 +270,8 @@ public class GameUI extends ConsoleHost implements Console.Directory {
                     syslog.append(ln, Color.WHITE);
             }
 
-            public void close() {}
-            public void flush() {}
+		public void close() {}
+		public void flush() {}
         });
         Debug.log = ui.cons.out;
         buffs = add(new Bufflist(), new Coord(95, 85));
@@ -272,8 +286,8 @@ public class GameUI extends ConsoleHost implements Console.Directory {
         }
         zerg = add(new Zergwnd(), new Coord(187, 50));
         if(!Config.autowindows.get("Kith & Kin").selected)
-            zerg.hide();
-        questwnd = add(new QuestWnd(), new Coord(0, sz.y-200));
+        zerg.hide();
+	    questwnd = add(new QuestWnd(), new Coord(0, sz.y-200));
         chatwnd = add(new ChatWnd(chat = new ChatUI(600, 150)), new Coord(20, sz.y-200));
         if(Config.autowindows.get("Chat") != null && Config.autowindows.get("Chat").selected)
             chatwnd.visible = false;
@@ -286,8 +300,8 @@ public class GameUI extends ConsoleHost implements Console.Directory {
         this.questhelper.hide();
         hidden = add(new HiddenManager());
         hidden.hide();
-        deleted = add(new DeletedManager());
-        deleted.hide();
+	    deleted = add(new DeletedManager());
+	    deleted.hide();
         alerted = add(new SoundManager());
         alerted.hide();
         gobspawner = add(new GobSpawner());
@@ -304,8 +318,8 @@ public class GameUI extends ConsoleHost implements Console.Directory {
     }
 
     public void beltPageSwitch1(){
-        nbelt.page = 0;
-        nbelt.upd_page();
+            nbelt.page = 0;
+            nbelt.upd_page();
     }
     public void beltPageSwitch2(){
         nbelt.page = 1;
@@ -386,7 +400,7 @@ public class GameUI extends ConsoleHost implements Console.Directory {
     public void peaceCurrent(){
         try {
             if (fv != null && fv.current != null && fv.curgive != null) {
-                fv.curgive.mousedown(Coord.z,1);
+              fv.curgive.mousedown(Coord.z,1);
             }
         }catch(Exception e){e.printStackTrace();}
     }
@@ -417,7 +431,7 @@ public class GameUI extends ConsoleHost implements Console.Directory {
         if(zerg.show(!zerg.visible)) {
             zerg.raise();
             fitwdg(zerg);
-            //  setfocus(zerg);
+          //  setfocus(zerg);
         }
     }
 
@@ -447,6 +461,10 @@ public class GameUI extends ConsoleHost implements Console.Directory {
             mapfile.raise();
             fitwdg(mapfile);
             setfocus(mapfile);
+			if(ResCache.global != null) {
+                MapFile cake = MapFile.load(ResCache.global, mapfilename());
+				RemoteNavigation.getInstance().uploadMarkerData(cake);
+			}
         }
     }
 
@@ -481,7 +499,7 @@ public class GameUI extends ConsoleHost implements Console.Directory {
                     (g.y > 0) ? parent.sz.y : (g.y < 0) ? 0 : (parent.sz.y / 2)));
                     */
             return(new Coord((g.x > 0)?parent.sz.x:(g.x < 0)?0:((parent.sz.x - this.sz.x) / 2),
-                    (g.y > 0)?parent.sz.y:(g.y < 0)?0:((parent.sz.y - this.sz.y) / 2)));
+                (g.y > 0)?parent.sz.y:(g.y < 0)?0:((parent.sz.y - this.sz.y) / 2)));
         }
 
         public void move(double a) {
@@ -523,11 +541,11 @@ public class GameUI extends ConsoleHost implements Console.Directory {
             return (vis);
         }
 
-        public boolean mshow() {
-            return(mshow(Utils.getprefb(id + "-visible", true)));
-        }
+	public boolean mshow() {
+	    return(mshow(Utils.getprefb(id + "-visible", true)));
+	}
         public boolean cshow(boolean vis) {
-            Utils.setprefb(id + "-visible", vis);
+	    Utils.setprefb(id + "-visible", vis);
             if (vis != tvis)
                 mshow(vis);
             return (vis);
@@ -540,10 +558,10 @@ public class GameUI extends ConsoleHost implements Console.Directory {
 
     public static class Hidewnd extends Window {
         Hidewnd(Coord sz, String cap, boolean lg) {
-            super(sz, cap, cap, lg);
+	    super(sz, cap, cap, lg);
         }
 
-        public Hidewnd(Coord sz, String cap) {
+	public Hidewnd(Coord sz, String cap) {
             super(sz, cap, cap,false);
         }
         public void wdgmsg(Widget sender, String msg, Object... args) {
@@ -621,7 +639,7 @@ public class GameUI extends ConsoleHost implements Console.Directory {
         }
 
         void addpol(Polity p) {
-            /* This isn't very nice. :( */
+	        /* This isn't very nice. :( */
             TButton btn = p.cap.equals("Village")?pol:pol2;
             ntab(p, btn);
             btn.tooltip = Text.render(p.cap);
@@ -629,14 +647,14 @@ public class GameUI extends ConsoleHost implements Console.Directory {
 
         @Override
         public boolean show(boolean show) {
-            if (show)
-                gameui().buddies.clearSearch();
+           if (show)
+               gameui().buddies.clearSearch();
             return super.show(show);
         }
     }
 
-    public static class DraggedItem {
-        public final GItem item;
+   public static class DraggedItem {
+       public final GItem item;
         final Coord dc;
 
         DraggedItem(GItem item, Coord dc) {
@@ -686,7 +704,7 @@ public class GameUI extends ConsoleHost implements Console.Directory {
         int x = (meters.size() % 3) * (IMeter.fsz.x + 5);
         int y = (meters.size() / 3) * (IMeter.fsz.y + 2);
         add(meter, portrait.c.x + portrait.sz.x + 10 + x, portrait.c.y + y);
-        // ulpanel.add(meter);
+       // ulpanel.add(meter);
         cmeters.add(meter);
         updcmeters();
     }
@@ -706,7 +724,7 @@ public class GameUI extends ConsoleHost implements Console.Directory {
     public void toggleGridBinds(){
         opts.menugridcheckbox.set(!opts.menugridcheckbox.a);
         if(opts.menugridcheckbox.a)
-            PBotUtils.sysMsg("Menugrid keybinds are now disabled!",Color.white);
+        PBotUtils.sysMsg("Menugrid keybinds are now disabled!",Color.white);
         else
             PBotUtils.sysMsg("Menugrid keybinds are now enabled!",Color.white);
     }
@@ -722,7 +740,7 @@ public class GameUI extends ConsoleHost implements Console.Directory {
 
     public void localScreenshot(){
         if(Config.screenurl != null)
-            HavenPanel.needtotakescreenshot = true;
+        HavenPanel.needtotakescreenshot = true;
     }
 
     public <T extends Widget> void delcmeter(Class<T> cl) {
@@ -828,9 +846,9 @@ public class GameUI extends ConsoleHost implements Console.Directory {
     }
 
     private void savewndpos() {
-        if(mapfile != null) {
-            Utils.setprefc("wndsz-map", mapfile.asz);
-        }
+	if(mapfile != null) {
+	    Utils.setprefc("wndsz-map", mapfile.asz);
+	}
     }
     public void addchild(Widget child, Object... args) {
         String place = ((String) args[0]).intern();
@@ -848,6 +866,7 @@ public class GameUI extends ConsoleHost implements Console.Directory {
             mmapwnd = adda(new MinimapWnd(mmap), new Coord(sz.x, 0), 1, 0);
             if(ResCache.global != null) {
                 MapFile file = MapFile.load(ResCache.global, mapfilename());
+				RemoteNavigation.getInstance().uploadMarkerData(file);
                 mmap.save(file);
                 mapfile = new MapWnd(mmap.save, map, Utils.getprefc("wndsz-map",new Coord(700, 500)), "Map");
                 mapfile.hide();
@@ -879,7 +898,7 @@ public class GameUI extends ConsoleHost implements Console.Directory {
             nbelt = add(new BeltWnd("n", data, KeyEvent.VK_0, KeyEvent.VK_9, 5, 0), new Coord(0, 150));
             menuSearch = add(new MenuSearch("Search..."));
             if(!Config.autowindows.get("Search...").selected)
-                menuSearch.hide();
+            menuSearch.hide();
             filter = add(new FilterWnd("Filter"));
             filter.hide();
         } else if (place == "fight") {
@@ -909,16 +928,16 @@ public class GameUI extends ConsoleHost implements Console.Directory {
             hand.add(new DraggedItem(g, lc));
             updhand();
         } else if (place == "chr") {
-            studywnd = add(new StudyWnd(), new Coord(400,100));
-            if(!Config.autowindows.get("Study").selected)
-                studywnd.hide();
+        	studywnd = add(new StudyWnd(), new Coord(400,100));
+        	if(!Config.autowindows.get("Study").selected)
+        	    studywnd.hide();
             chrwdg = add((CharWnd) child, new Coord(300, 50));
             if(!Config.autowindows.get("Character Sheet").selected)
-                chrwdg.hide();
+            chrwdg.hide();
             if(Config.hungermeter)
                 addcmeter(new HungerMeter(chrwdg.glut,"HungerMeter"));
             if(Config.fepmeter)
-                addcmeter(new FepMeter(chrwdg.feps,"FepMeter"));
+            	addcmeter(new FepMeter(chrwdg.feps,"FepMeter"));
         } else if (place == "craft") {
             final Widget mkwdg = child;
             if(craftwnd != null) {
@@ -986,14 +1005,14 @@ public class GameUI extends ConsoleHost implements Console.Directory {
                     updhand();
                 }
             }
-        } else if(w instanceof Polity && polities.contains(w)) {
+	} else if(w instanceof Polity && polities.contains(w)) {
             polities.remove(w);
             zerg.dtab(zerg.pol);
         } else if (w == chrwdg) {
             chrwdg = null;
         }
         if(meters.remove(w))
-            updcmeters();
+        	updcmeters();
         cmeters.remove(w);
     }
 
@@ -1018,7 +1037,7 @@ public class GameUI extends ConsoleHost implements Console.Directory {
         g.aimage(curprog, hgc, 0.5, 0.5);
         if (Config.showprogressperc)
             g.atextstroked((int) (prog * 100) + "%", hgc, 0.5, 2.5, Color.WHITE, Color.BLACK, Text.num12boldFnd);
-    }
+        }
 
     public void draw(GOut g) {
         super.draw(g);
@@ -1046,25 +1065,25 @@ public class GameUI extends ConsoleHost implements Console.Directory {
         super.tick(dt);
         double now = Utils.rtime();
         try{
-            IMeter.Meter stam = getmeter("stam", 0);
-            if(Config.temporaryswimming && temporarilyswimming){
-                if(System.currentTimeMillis() - SwimTimer >= 30000){
-                    SwimTimer = 0;
-                    temporarilyswimming = false;
-                    PBotUtils.doAct("swim");
-                }
+        IMeter.Meter stam = getmeter("stam", 0);
+        if(Config.temporaryswimming && temporarilyswimming){
+            if(System.currentTimeMillis() - SwimTimer >= 30000){
+                SwimTimer = 0;
+                temporarilyswimming = false;
+                PBotUtils.doAct("swim");
             }
-            if(!drinkingWater && Config.autodrink && (DrinkThread == null || !DrinkThread.isAlive()) && stam.a < Config.autodrinkthreshold) {
-                if(System.currentTimeMillis() - DrinkTimer >= Config.autodrinktime * 1000) {
-                    DrinkTimer = System.currentTimeMillis();
-                    new Thread(new DrinkWater(this)).start();
-                }
+        }
+        if(!drinkingWater && Config.autodrink && (DrinkThread == null || !DrinkThread.isAlive()) && stam.a < Config.autodrinkthreshold) {
+            if(System.currentTimeMillis() - DrinkTimer >= Config.autodrinktime * 1000) {
+                DrinkTimer = System.currentTimeMillis();
+                new Thread(new DrinkWater(this)).start();
             }
-            int energy = getmeter("nrj", 0).a;
-            if(energy < 21 && System.currentTimeMillis() - StarvationAlertDelay > 10000 && Config.StarveAlert) {
-                StarvationAlertDelay = System.currentTimeMillis();
-                PBotUtils.sysMsg("You are Starving!",Color.white);
-            }}catch(Exception e){}//exceptions doing these two things aren't critical, ignore
+        }
+        int energy = getmeter("nrj", 0).a;
+        if(energy < 21 && System.currentTimeMillis() - StarvationAlertDelay > 10000 && Config.StarveAlert) {
+            StarvationAlertDelay = System.currentTimeMillis();
+            PBotUtils.sysMsg("You are Starving!",Color.white);
+        }}catch(Exception e){}//exceptions doing these two things aren't critical, ignore
         if(now - lastwndsave > 60) {
             savewndpos();
             lastwndsave = now;
@@ -1075,7 +1094,7 @@ public class GameUI extends ConsoleHost implements Console.Directory {
             wdgmsg("afk");
             if(Config.afklogouttime != 0) {
                 if(idle > Config.afklogouttime * 60)
-                    logoutChar();
+                logoutChar();
             }
         } else if (afk && (idle <= 300)) {
             afk = false;
@@ -1194,7 +1213,7 @@ public class GameUI extends ConsoleHost implements Console.Directory {
     }
 
     public void wdgmsg(Widget sender, String msg, Object... args) {
-        //   System.out.println("############");if(!sender.toString().contains("Camera")) System.out.println(sender);System.out.println(msg);for(Object o :args) System.out.println(o);
+     //   System.out.println("############");if(!sender.toString().contains("Camera")) System.out.println(sender);System.out.println(msg);for(Object o :args) System.out.println(o);
         if(msg.equals("close")) {
             if (sender == chrwdg) {
                 chrwdg.hide();
@@ -1233,7 +1252,7 @@ public class GameUI extends ConsoleHost implements Console.Directory {
             super("gfx/hud/mainmenu/" + base, "", "-d", "-h");
             this.action = action;
             this.tip = tooltip;
-            // KeyBinder.add(code, mods, action);
+           // KeyBinder.add(code, mods, action);
         }
 
         @Override
@@ -1277,7 +1296,7 @@ public class GameUI extends ConsoleHost implements Console.Directory {
         if (cur != null) {
             fv.lsrel.remove(cur);
             fv.lsrel.addLast(cur);
-            fv.wdgmsg("bump", (int) fv.lsrel.get(0).gobid);
+        fv.wdgmsg("bump", (int) fv.lsrel.get(0).gobid);
         }
     }
 
@@ -1361,11 +1380,11 @@ public class GameUI extends ConsoleHost implements Console.Directory {
         if(chatwnd.visible && !chat.hasfocus) {
             setfocus(chat);
         } else if(chatwnd.visible && chat.hasfocus){
-            // OpenChat();
+           // OpenChat();
             setfocus(maininv);
         } else{
             if(!chatwnd.visible){
-                OpenChat();
+               OpenChat();
             } else {
                 setfocus(chat);
             }
@@ -1404,7 +1423,7 @@ public class GameUI extends ConsoleHost implements Console.Directory {
     public void logout(){
         if(Discord.jdalogin != null)
             DiscordToggle();
-        //  act("lo");
+      //  act("lo");
         ui.sess.close();
     }
     public void logoutChar() {
@@ -1423,13 +1442,13 @@ public class GameUI extends ConsoleHost implements Console.Directory {
     }
 
     public void toggleSearch(){
-        KeyBind k = KeyBinder.get(TOGGLE_SEARCH);
-        if (menuSearch.show(!menuSearch.visible)) {
-            menuSearch.raise();
-            fitwdg(menuSearch);
-            if(k.mods == 4)
-                menuSearch.ignoreinit = true;
-        }
+       KeyBind k = KeyBinder.get(TOGGLE_SEARCH);
+    if (menuSearch.show(!menuSearch.visible)) {
+       menuSearch.raise();
+       fitwdg(menuSearch);
+        if(k.mods == 4)
+        menuSearch.ignoreinit = true;
+    }
     }
 
     public void doNothing(){
@@ -1460,44 +1479,44 @@ public class GameUI extends ConsoleHost implements Console.Directory {
     }
 
     public void toggleDangerRadius(){
-        Config.showminerad = !Config.showminerad;
+            Config.showminerad = !Config.showminerad;
         PBotUtils.sysMsg("Mine support radii are now : "+Config.showminerad,Color.white);
-        Utils.setprefb("showminerad", Config.showminerad);
+            Utils.setprefb("showminerad", Config.showminerad);
     }
 
     public void toggleSafeRadius(){
-        if(saferadius == 1){
-            saferadius = 2;
-            Config.showTroughrad = false;
-            Config.showBeehiverad = true;
-            Utils.setprefb("showTroughrad", Config.showTroughrad);
-            Utils.setprefb("showBeehiverad", Config.showBeehiverad);
-            PBotUtils.sysMsg("Troughs off, Beehives on.",Color.white);
-        }
-        else if(saferadius == 2){
-            saferadius = 3;
-            Config.showTroughrad = true;
-            Config.showBeehiverad = true;
-            Utils.setprefb("showTroughrad", Config.showTroughrad);
-            Utils.setprefb("showBeehiverad", Config.showBeehiverad);
-            PBotUtils.sysMsg("Troughs on, Beehives on.",Color.white);
-        }
-        else if(saferadius == 3){
-            saferadius = 4;
-            Config.showTroughrad = true;
-            Config.showBeehiverad = false;
-            Utils.setprefb("showTroughrad", Config.showTroughrad);
-            Utils.setprefb("showBeehiverad", Config.showBeehiverad);
-            PBotUtils.sysMsg("Troughs on, Beehives off.",Color.white);
-        }
-        else if(saferadius == 4){
-            saferadius = 1;
-            Config.showTroughrad = false;
-            Config.showBeehiverad = false;
-            Utils.setprefb("showTroughrad", Config.showTroughrad);
-            Utils.setprefb("showBeehiverad", Config.showBeehiverad);
-            PBotUtils.sysMsg("Troughs off, Beehives off.",Color.white);
-        }
+      if(saferadius == 1){
+          saferadius = 2;
+          Config.showTroughrad = false;
+          Config.showBeehiverad = true;
+          Utils.setprefb("showTroughrad", Config.showTroughrad);
+          Utils.setprefb("showBeehiverad", Config.showBeehiverad);
+          PBotUtils.sysMsg("Troughs off, Beehives on.",Color.white);
+      }
+      else if(saferadius == 2){
+          saferadius = 3;
+          Config.showTroughrad = true;
+          Config.showBeehiverad = true;
+          Utils.setprefb("showTroughrad", Config.showTroughrad);
+          Utils.setprefb("showBeehiverad", Config.showBeehiverad);
+          PBotUtils.sysMsg("Troughs on, Beehives on.",Color.white);
+      }
+      else if(saferadius == 3){
+          saferadius = 4;
+          Config.showTroughrad = true;
+          Config.showBeehiverad = false;
+          Utils.setprefb("showTroughrad", Config.showTroughrad);
+          Utils.setprefb("showBeehiverad", Config.showBeehiverad);
+          PBotUtils.sysMsg("Troughs on, Beehives off.",Color.white);
+      }
+      else if(saferadius == 4){
+          saferadius = 1;
+          Config.showTroughrad = false;
+          Config.showBeehiverad = false;
+          Utils.setprefb("showTroughrad", Config.showTroughrad);
+          Utils.setprefb("showBeehiverad", Config.showBeehiverad);
+          PBotUtils.sysMsg("Troughs off, Beehives off.",Color.white);
+      }
 
     }
 
@@ -1539,7 +1558,7 @@ public class GameUI extends ConsoleHost implements Console.Directory {
         if (map != null)
             map.refreshGobsAll();
         if(Config.hideuniquegobs)
-            PBotUtils.sysMsg("Unique gobs are now hidden.",Color.white);
+        PBotUtils.sysMsg("Unique gobs are now hidden.",Color.white);
         else
             PBotUtils.sysMsg("Unique gobs are now NOT hidden.",Color.white);
     }
@@ -1570,7 +1589,7 @@ public class GameUI extends ConsoleHost implements Console.Directory {
     public void changeDecks(int deck){
         FightWnd fightwdg = ui.fightwnd.get();
         if(fightwdg != null)
-            fightwdg.changebutton(deck);
+           fightwdg.changebutton(deck);
     }
 
     public void leftHand(){
@@ -1648,7 +1667,7 @@ public class GameUI extends ConsoleHost implements Console.Directory {
     }
 
     public boolean globtype(char key, KeyEvent ev) {
-        if (key == ':') {
+         if (key == ':') {
             entercmd();
             return true;
         } else if ((key == 27) && (map != null) && !map.hasfocus) {
@@ -1664,10 +1683,10 @@ public class GameUI extends ConsoleHost implements Console.Directory {
     public boolean chatfocused(){
         boolean isfocused = false;
         for(Widget w = chat.lchild;w!=null;w=w.prev) {
-            if (w instanceof TextEntry)
-                if (w.hasfocus)
-                    isfocused = true;
-        }
+                if (w instanceof TextEntry)
+                    if (w.hasfocus)
+                        isfocused = true;
+            }
 
         return isfocused;
     }
@@ -1862,6 +1881,19 @@ public class GameUI extends ConsoleHost implements Console.Directory {
             FoodInfo.showbaseq = Utils.parsebool(args[1]);
             msg("q10 FEP values in tooltips are now " + (FoodInfo.showbaseq ? "enabled" : "disabled"));
         });
+		cmdmap.put("markup", (cons, args) -> {
+			if(ResCache.global != null) {
+                MapFile file = MapFile.load(ResCache.global, mapfilename());
+				RemoteNavigation.getInstance().uploadMarkerData(file);
+				RemoteNavigation.getInstance().uploadMarkerData(file);
+				System.out.println("dicks dicks dicks");
+                mmap.save(file);
+                mapfile = new MapWnd(mmap.save, map, Utils.getprefc("wndsz-map",new Coord(700, 500)), "Map");
+                mapfile.hide();
+                add(mapfile, 50, 50);
+                mmapwnd.mapfile = mapfile;
+            }
+		});
     }
     public void registerItemCallback(ItemClickCallback itemClickCallback) {
         this.itemClickCallback = itemClickCallback;

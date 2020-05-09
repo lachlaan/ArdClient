@@ -38,14 +38,14 @@ public class SteelRefueler extends Window implements GobSelectCallback {
         add(lbl, new Coord(0, 20));
 
         Label lblctxt = new Label("Crucibles Selected:", infof);
-        add(lblctxt, new Coord(15, 45));
+        add(lblctxt, new Coord(15, 60));
         lblc = new Label("0", Text.num12boldFnd, Color.WHITE);
-        add(lblc, new Coord(110, 43));
+        add(lblc, new Coord(110, 58));
 
         Label lblstxt = new Label("Stockpiles Selected:", infof);
-        add(lblstxt, new Coord(135, 45));
+        add(lblstxt, new Coord(135, 60));
         lbls = new Label("0", Text.num12boldFnd, Color.WHITE);
-        add(lbls, new Coord(235, 43));
+        add(lbls, new Coord(235, 58));
 
         clearbtn = new Button(140, "Clear Selection") {
             @Override
@@ -56,7 +56,7 @@ public class SteelRefueler extends Window implements GobSelectCallback {
                 lbls.settext(stockpiles.size() + "");
             }
         };
-        add(clearbtn, new Coord(65, 90));
+        add(clearbtn, new Coord(65, 70));
 
         runbtn = new Button(140, "Run") {
             @Override

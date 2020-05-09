@@ -26,7 +26,7 @@
 
 package haven;
 
-import haven.purus.Iconfinder;
+import haven.error.ErrorHandler;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -38,26 +38,22 @@ import java.util.*;
 import static haven.Utils.getprop;
 
 public class Config {
-    public static String revVersion = "1.0";
     public static final File HOMEDIR = new File("").getAbsoluteFile();
     public static boolean dumpcode = getprop("haven.dumpcode", "off").equals("on");
     public static final boolean iswindows = System.getProperty("os.name").startsWith("Windows");
     public static final String LINE_SEPARATOR = System.getProperty("line.separator");
-    public static String resdir = getprop("haven.resdir", System.getenv("HAFEN_RESDIR"));
     public static String authuser = null;
     public static String authserv = null;
     public static String defserv = null;
     public static URL resurl = null;
     public static boolean dbtext = false;
     public static boolean profile = false;
-    public static boolean simplemap = Utils.getprefb("simplemap", false);
-    public static boolean rawrzmap = Utils.getprefb("rawrzmap", false);
-    public static boolean disableBlackOutLinesOnMap = Utils.getprefb("disableBlackOutLinesOnMap", false);
-    public static boolean mapscale = Utils.getprefb("mapscale", false);
     public static boolean profilegpu = false;
     public static boolean nopreload = false;
     public static int mainport = 1870;
     public static int authport = 1871;
+	public static boolean enableNavigationTracking = Utils.getprefb("enableNavigationTracking", true);
+    public static boolean sendCustomMarkers = Utils.getprefb("sendCustomMarkers", false);
     public static boolean skybox = Utils.getprefb("skybox", true);
     public static boolean savecutlery = Utils.getprefb("savecutlery", true);
     public static boolean lowerterraindistance = Utils.getprefb("lowerterraindistance", false);
@@ -69,7 +65,6 @@ public class Config {
     public static boolean mapdrawflags = Utils.getprefb("mapdrawflags", false);
     public static boolean hideflovisual = Utils.getprefb("hideflovisual", false);
     public static boolean longtooltips = Utils.getprefb("longtooltips", true);
-    public static boolean straightcavewall = Utils.getprefb("straightcavewall", false);
     public static boolean avatooltips = Utils.getprefb("avatooltips", false);
     public static boolean showkinnames = Utils.getprefb("showkinnames", true);
     public static boolean savemmap = Utils.getprefb("savemmap", false);
@@ -229,8 +224,6 @@ public class Config {
     public static boolean DropMeat = Utils.getprefb("DropMeat", false);
     public static boolean DropBones = Utils.getprefb("DropBones", false);
     public static boolean bonsai = Utils.getprefb("bonsai", false);
-    public static boolean largetree = Utils.getprefb("largetree", false);
-    public static boolean largetreeleaves = Utils.getprefb("largetree", false);
     public static int fontsizechat = Utils.getprefi("fontsizechat", 14);
     public static int curiotimetarget = Utils.getprefi("curiotimetarget", 1440);
     public static int statgainsize = Utils.getprefi("statgainsize", 1);
@@ -272,7 +265,6 @@ public class Config {
     public static int smatSupportsgreen= Utils.getprefi("smatSupportsgreen",255);
     public static int smatSupportsblue = Utils.getprefi("smatSupportsblue",0);
     public static String confid = "ArdClient";
-    public static boolean elitecombatanimal = Utils.getprefb("disableAllAnimations", true);
     // public static final boolean isUpdate;
     private static String username, playername;
     public static boolean showPBot = Utils.getprefb("showPBot",true);
@@ -351,13 +343,8 @@ public class Config {
 
     public final static HashMap<String, CheckListboxItem> trees = new HashMap<String, CheckListboxItem>(57) {{
         put("chastetree", new CheckListboxItem("Chaste Tree"));
-        put("dogwood", new CheckListboxItem("Dogwood"));
-        put("strawberrytree", new CheckListboxItem("Strawberry Tree"));
-        put("stonepine", new CheckListboxItem("Stone Pine"));
-        put("blackpine", new CheckListboxItem("Black Pine"));
         put("silverfir", new CheckListboxItem("Silver Fir"));
         put("treeheath", new CheckListboxItem("Heath Tree"));
-        put("sycamore", new CheckListboxItem("Sycamore"));
         put("terebinth", new CheckListboxItem("Terebinth"));
         put("lotetree", new CheckListboxItem("Lote Tree"));
         put("sorbtree", new CheckListboxItem("Sorb Tree"));
@@ -414,15 +401,14 @@ public class Config {
         put("gnomeshat", new CheckListboxItem("Gnomes Hat"));
     }};
 
-    public final static HashMap<String, CheckListboxItem> icons = new HashMap<String, CheckListboxItem>(73) {{
-        put("mandrakespirited", new CheckListboxItem("Spirited Mandrake"));
+    public final static HashMap<String, CheckListboxItem> icons = new HashMap<String, CheckListboxItem>(72) {{
+    	put("mandrakespirited", new CheckListboxItem("Spirited Mandrake"));
         put("dandelion", new CheckListboxItem("Dandelion"));
         put("chantrelle", new CheckListboxItem("Chantrelle"));
         put("blueberry", new CheckListboxItem("Blueberry"));
         put("rat", new CheckListboxItem("Rat"));
         put("chicken", new CheckListboxItem("Chicken"));
         put("chick", new CheckListboxItem("Chick"));
-        put("duskfern", new CheckListboxItem("Dusk Fern"));
         put("spindlytaproot", new CheckListboxItem("Spindly Taproot"));
         put("stingingnettle", new CheckListboxItem("Stinging Nettle"));
         put("dragonfly", new CheckListboxItem("Dragonfly"));
@@ -694,7 +680,6 @@ public class Config {
         put("gfx/terobjs/herbs/blueberry", "Blueberry");
         put("gfx/terobjs/herbs/strawberry", "Strawberry");
         put("gfx/kritter/rat/rat", "Rat");
-        put("gfx/terobs/villageidol", "Village Idol");
         put("gfx/kritter/chicken/chicken", "Chicken");
         put("gfx/kritter/chicken/chick", "Chick");
         put("gfx/terobjs/herbs/spindlytaproot", "Spindly Taproot");
@@ -820,12 +805,7 @@ public class Config {
             "soapstone",
             "orthoclase",
             "alabaster",
-            "corund",
-            "diorite",
-            "breccia",
-            "diabase",
-            "slate",
-            "arkose"
+            "corund"
     ));
 
     public final static Set<String> mineablesOre = new HashSet<String>(Arrays.asList(
@@ -871,7 +851,7 @@ public class Config {
     }};
 
     public final static HashMap<String, CheckListboxItem> disableshiftclick = new HashMap<String, CheckListboxItem>(8){{
-        put("steelcrucible", new CheckListboxItem("Steel Crucibles"));
+       put("steelcrucible", new CheckListboxItem("Steel Crucibles"));
         put("ttub", new CheckListboxItem("Tanning Tub"));
         put("smelter", new CheckListboxItem("Smelters"));
         put("oven", new CheckListboxItem("Ovens"));
@@ -1100,27 +1080,27 @@ public class Config {
                 }
             }
         }
+
         loadLogins();
-        Iconfinder.loadConfig();
     }
 
-    private static void loadBuildVersion() {
-        InputStream in = Config.class.getResourceAsStream("/buildinfo");
-        try {
+        private static void loadBuildVersion() {
+            InputStream in = Config.class.getResourceAsStream("/buildinfo");
             try {
-                if(in != null) {
-                    Properties info = new Properties();
-                    info.load(in);
-                    newversion = info.getProperty("version");
-                    gitrev = info.getProperty("git-rev");
+                try {
+                    if(in != null) {
+                        Properties info = new Properties();
+                        info.load(in);
+                        newversion = info.getProperty("version");
+                        gitrev = info.getProperty("git-rev");
+                    }
+                } finally {
+                    if (in != null) { in.close(); }
                 }
-            } finally {
-                if (in != null) { in.close(); }
+            } catch(IOException e) {
+                throw(new Error(e));
             }
-        } catch(IOException e) {
-            throw(new Error(e));
         }
-    }
     public static File getFile(String name) {
         return new File(HOMEDIR, name);
     }

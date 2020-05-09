@@ -90,7 +90,7 @@ public class MenuGrid extends Widget {
         public char hotkey() {return(res.layer(Resource.action).hk);}
         public void use()
         {
-            pag.use();
+	    pag.use();
         }
 
         public String sortkey() {
@@ -99,7 +99,7 @@ public class MenuGrid extends Widget {
             if(ai.ad.length == 0) {
                 return("\0" + name());
             }
-
+            
             if(ai.ad[0].contains("!")) {
                 return("\0\0" + ai.ad[0] + name());
             }
@@ -113,10 +113,10 @@ public class MenuGrid extends Widget {
                 info = ItemInfo.buildinfo(this, pag.rawinfo);
             return(info);
         }
-        private static final OwnerContext.ClassResolver<PagButton> ctxr = new OwnerContext.ClassResolver<PagButton>()
-                .add(Glob.class, p -> p.pag.scm.ui.sess.glob)
-                .add(Session.class, p -> p.pag.scm.ui.sess);
-        public <T> T context(Class<T> cl) {return(ctxr.context(cl, this));}
+	private static final OwnerContext.ClassResolver<PagButton> ctxr = new OwnerContext.ClassResolver<PagButton>()
+	    .add(Glob.class, p -> p.pag.scm.ui.sess.glob)
+	    .add(Session.class, p -> p.pag.scm.ui.sess);
+	public <T> T context(Class<T> cl) {return(ctxr.context(cl, this));}
 
         public BufferedImage rendertt(boolean withpg) {
             Resource.AButton ad = res.layer(Resource.action);
@@ -221,9 +221,9 @@ public class MenuGrid extends Widget {
             return (res().layer(Resource.action));
         }
 
-        public void use() {
-            onUse.accept(this);
-        }
+	public void use() {
+	    onUse.accept(this);
+	}
         private PagButton button = null;
 
         public PagButton button() {
@@ -424,11 +424,11 @@ public class MenuGrid extends Widget {
         addSpecial(new SpecialPagina(this, "paginae::amber::coal12",
                 Resource.local().load("paginae/amber/coal12"),
                 (pag) -> {
-                    GameUI gui = gameui();
-                    if(gui != null){
-                        Thread t = new Thread(new AddCoalToSmelter(gui, 12), "AddCoalToSmelter");
-                        t.start();
-                    }}
+            GameUI gui = gameui();
+            if(gui != null){
+            Thread t = new Thread(new AddCoalToSmelter(gui, 12), "AddCoalToSmelter");
+             t.start();
+            }}
         ));
         addSpecial(new SpecialPagina(this, "paginae::amber::coal9",
                 Resource.local().load("paginae/amber/coal9"),
@@ -785,7 +785,7 @@ public class MenuGrid extends Widget {
                 (pag) -> {
                     GameUI gui = gameui();
                     if(gui != null){
-                        gui.OpenChat();
+                      gui.OpenChat();
                     }}
         ));
 
@@ -839,7 +839,7 @@ public class MenuGrid extends Widget {
                     (pag) -> {
                         GameUI gui = gameui();
                         if(gui != null){
-                            gui.toggleCharWnd();
+                           gui.toggleCharWnd();
                         }}
             ));
 
@@ -848,7 +848,7 @@ public class MenuGrid extends Widget {
                     (pag) -> {
                         GameUI gui = gameui();
                         if(gui != null){
-                            gui.toggleEquipment();
+                          gui.toggleEquipment();
                         }}
             ));
             addSpecial(new SpecialPagina(this, "paginae::inv",
@@ -856,7 +856,7 @@ public class MenuGrid extends Widget {
                     (pag) -> {
                         GameUI gui = gameui();
                         if(gui != null){
-                            gui.toggleInv();
+                          gui.toggleInv();
                         }}
             ));
             addSpecial(new SpecialPagina(this, "paginae::kithnkin",
@@ -864,7 +864,7 @@ public class MenuGrid extends Widget {
                     (pag) -> {
                         GameUI gui = gameui();
                         if(gui != null){
-                            gui.toggleKinList();
+                          gui.toggleKinList();
                         }}
             ));
             addSpecial(new SpecialPagina(this, "paginae::search",
@@ -872,7 +872,7 @@ public class MenuGrid extends Widget {
                     (pag) -> {
                         GameUI gui = gameui();
                         if(gui != null){
-                            gui.toggleSearch();
+                          gui.toggleSearch();
                         }}
             ));
 
@@ -881,7 +881,7 @@ public class MenuGrid extends Widget {
                     (pag) -> {
                         GameUI gui = gameui();
                         if(gui != null){
-                            gui.toggleOptions();
+                          gui.toggleOptions();
                         }}
             ));
         }
@@ -892,7 +892,7 @@ public class MenuGrid extends Widget {
                 (pag) -> {
                     GameUI gui = gameui();
                     if(gui != null){
-                        gui.toggleMinimap();
+                       gui.toggleMinimap();
                     }}
         ));
         addSpecial(new SpecialPagina(this, "paginae::windows::study",
@@ -900,7 +900,7 @@ public class MenuGrid extends Widget {
                 (pag) -> {
                     GameUI gui = gameui();
                     if(gui != null){
-                        gui.toggleStudy();
+                      gui.toggleStudy();
                     }}
         ));
 
@@ -1097,7 +1097,7 @@ public class MenuGrid extends Widget {
             return(true);
         } else {
             return true;
-            //  return super.mousedown(c, button);
+          //  return super.mousedown(c, button);
         }
     }
 
@@ -1131,7 +1131,7 @@ public class MenuGrid extends Widget {
         }  else{
             Resource.AButton act = r.pag.act();
             if (act == null) {
-                r.use();
+              r.use();
             }
             else {
                 String[] ad = r.pag.act().ad;
@@ -1235,7 +1235,7 @@ public class MenuGrid extends Widget {
             if(Config.autowindows.get("Belt").selected){
                 WItem l = gui.getequipory().quickslots[5];
                 if(l != null)
-                    l.item.wdgmsg("iact", Coord.z, -1);
+                l.item.wdgmsg("iact", Coord.z, -1);
             }
             for (Widget w = gameui().chat.lchild; w != null; w = w.prev) {
                 if (w instanceof ChatUI.MultiChat) {

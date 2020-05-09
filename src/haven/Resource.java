@@ -138,12 +138,6 @@ public class Resource implements Serializable {
 	public String name() { return name; }
 	}
 
-	public String toString2() {
-		return(String.format("#<res-name %s v%d>", name, ver));
-	}
-
-
-
 	public static class Spec extends Named implements Serializable {
 		public final transient Pool pool;
 
@@ -737,23 +731,16 @@ public class Resource implements Serializable {
 	private static Pool _local = null;
 
 	public static Pool local() {
-		if(_local == null) {
-			synchronized(Resource.class) {
-				if(_local == null) {
-					Pool local = new Pool(new JarSource());
-					try {
-						if(Config.resdir != null)
-							local.add(new FileSource(new File(Config.resdir)));
-					} catch(Exception e) {
-						/* Ignore these. We don't want to be crashing the client
-						 * for users just because of errors in development
-						 * aids. */
-					}
+		if (_local == null) {
+			synchronized (Resource.class) {
+				if (_local == null) {
+					Pool local = new Pool(new FileSource(new File("res")));
+					local.add(new JarSource());
 					_local = local;
 				}
 			}
 		}
-		return(_local);
+		return (_local);
 	}
 
 	private static Pool _remote = null;
@@ -1190,36 +1177,9 @@ public class Resource implements Serializable {
 		public Code(Message buf) {
 			name = buf.string();
 			data = buf.bytes();
-    /*        try {
-                decode();
-            }catch (Exception ex){
-                System.out.println("Error Code: " +ex.getMessage());
-            }*/
-			//Ardenneses pro fucking code do not touch ever
 		}
 
 		public void init() {
-		}
-		public void decode() throws Exception {
-			String resname = name;
-			if(name.equals("Fac")){
-				resname = java.util.UUID.randomUUID().toString();
-			}
-			File f = new File("code/"+resname+"/"+resname+".data");
-			new File("code/"+resname+"/").mkdirs();
-			f.createNewFile();
-			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f,false),"UTF-8"));
-			bw.write("#CODE LAYER FOR RES " + resname + "\r\n");
-			bw.write("#String class_name" + "\r\n");
-			bw.write("#Note: the .class file will have the same namea s this file"+ "\r\n");
-			bw.write(resname.replace("\n","\\n")+"\r\n");
-			bw.flush();
-			bw.close();
-			f = new File("code/"+resname+"/"+resname+".class");
-			FileOutputStream fout = new FileOutputStream(f);
-			fout.write(data);
-			fout.flush();
-			fout.close();
 		}
 	}
 

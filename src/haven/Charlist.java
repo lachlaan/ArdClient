@@ -27,6 +27,9 @@
 package haven;
 
 import java.util.*;
+import integrations.map.Navigation;
+
+
 
 public class Charlist extends Widget {
     public static final Tex bg = Resource.loadtex("gfx/hud/avakort");
@@ -136,10 +139,12 @@ public class Charlist extends Widget {
 	if(sender instanceof Button) {
 	    synchronized(chars) {
 		for(Char c : chars) {
-		    if(sender == c.plb)
-			wdgmsg("play", c.name);
-			Config.setPlayerName(c.name);
-		}
+		    if (sender == c.plb) {
+                wdgmsg("play", c.name);
+                Navigation.setCharacterName(c.name);
+				Config.setPlayerName(c.name);
+                }
+			}
 	    }
 	} else if(sender instanceof Avaview) {
 	} else {

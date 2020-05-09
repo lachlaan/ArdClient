@@ -1,5 +1,8 @@
 package haven.res.lib.plants;
 
+import java.util.ArrayList;
+import java.util.Random;
+
 import haven.Config;
 import haven.FastMesh.MeshRes;
 import haven.Message;
@@ -8,9 +11,6 @@ import haven.Sprite;
 import haven.Sprite.Factory;
 import haven.Sprite.Owner;
 import haven.resutil.CSprite;
-
-import java.util.ArrayList;
-import java.util.Random;
 
 public class GaussianPlant implements Factory {
     public final int numl;

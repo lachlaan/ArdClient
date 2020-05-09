@@ -1,8 +1,8 @@
 package haven.res.lib.tree;
 
-import haven.Coord3f;
-import haven.Material;
-import haven.res.lib.leaves.FallingLeaves;
+import haven.*;
+import haven.res.lib.leaves.*;
+import java.util.*;
 
 public class StdLeaf extends FallingLeaves.Leaf {
 	public final Material m;

@@ -112,7 +112,7 @@ public interface RenderLink {
                         if (res == null) {
 				ArrayList<Rendered> cl = new ArrayList<>();
                             for (FastMesh.MeshRes mr : lres.get().layers(FastMesh.MeshRes.class)) {
-                                if(((meshid >= 0) && (mr.id < 0)) || ((mr.id & meshmask) == meshid))
+                                if (((meshid >= 0) && (mr.id < 0)) || ((mr.id & meshmask) == meshid))
                                     cl.add(mr.mat.get().apply(mr.m));
                             }
                             final Rendered[] ca = cl.toArray(new Rendered[0]);

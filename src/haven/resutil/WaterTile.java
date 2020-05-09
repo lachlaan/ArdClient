@@ -36,7 +36,6 @@ import static haven.glsl.Cons.*;
 import haven.MapMesh.Scan;
 import haven.Surface.Vertex;
 import haven.Surface.MeshVertex;
-import haven.glsl.Type;
 
 import javax.media.opengl.*;
 import java.awt.Color;

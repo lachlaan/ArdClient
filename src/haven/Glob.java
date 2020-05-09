@@ -69,9 +69,6 @@ public class Glob {
     public double skyblend = 0.0;
     private Map<Indir<Resource>, Object> wmap = new HashMap<Indir<Resource>, Object>();
     public static haven.timers.TimersThread timersThread;
-    public String servertime;
-    public Tex servertimetex;
-    public int moonid = 0;
     public String mservertime;
     public String lservertime;
     public String rservertime;
@@ -79,8 +76,18 @@ public class Glob {
     public Tex mservertimetex;
     public Tex lservertimetex;
     public Tex rservertimetex;
-    public boolean night =false; //true is night
     public Tex bservertimetex;
+	
+	private static WeakReference<Glob> reference = new WeakReference<>(null);
+
+    public static Glob getByReference() {
+        return reference.get();
+    }
+
+
+
+    public int moonid = 0;
+    public boolean night =false; //true is night
 
     static {
         timersThread = new haven.timers.TimersThread();
@@ -92,6 +99,7 @@ public class Glob {
         gobhitmap = new GobHitmap();
         map = new MCache(sess);
         party = new Party(this);
+		reference = new WeakReference<>(this);
     }
 
     @Resource.PublishedCode(name = "wtr")
@@ -227,41 +235,36 @@ public class Glob {
             "Waning Gibbous",
             "Last Quarter",
             "Waning Crescent"
-    };
+        };
 
     private void servertimecalc() {
-        if (ast == null)
-            return;
-
         long secs = (long)globtime();
         long day = secs / secinday;
         long secintoday = secs % secinday;
         long hours = secintoday / 3600;
         long mins = (secintoday % 3600) / 60;
-        int nextseason = (int)Math.ceil((1 - ast.sp) * (ast.is == 1 ? 30 : 10));
 
-        String fmt;
-        switch (ast.is) {
-            case 0:
-                fmt = nextseason == 1 ? "Day %d, %02d:%02d. Spring (%d RL day left)." : "Day %d, %02d:%02d. Spring (%d RL days left).";
-                break;
-            case 1:
-                fmt = nextseason == 1 ? "Day %d, %02d:%02d. Summer (%d RL day left)." : "Day %d, %02d:%02d. Summer (%d RL days left).";
-                break;
-            case 2:
-                fmt = nextseason == 1 ? "Day %d, %02d:%02d. Autumn (%d RL day left)." : "Day %d, %02d:%02d. Autumn (%d RL days left).";
-                break;
-            case 3:
-                fmt = nextseason == 1 ? "Day %d, %02d:%02d. Winter (%d RL day left)." : "Day %d, %02d:%02d. Winter (%d RL days left).";
-                break;
-            default:
-                fmt = "Unknown Season";
+        bservertime = " ";
+        String dayOfMonth = "";
+        String phaseOfMoon = " ";
+        if (ast != null) {
+            int sdt = (ast.is == 1 ? 90 : 30); //days of season total
+            int sdp = (int)(ast.sp * (sdt)); //days of season passed
+            int sdl = (int)Math.floor((1 - ast.sp) * (sdt));
+            if (sdl >= 1) 
+                dayOfMonth = String.format(Resource.getLocString(Resource.BUNDLE_LABEL, ", %s %d (%d left)"), seasonNames[ast.is], (sdp + 1), sdl);
+            else
+                dayOfMonth = String.format(Resource.getLocString(Resource.BUNDLE_LABEL, ", last day of %s"), seasonNames[ast.is]);
+            int mp = (int)Math.round(ast.mp * mPhaseNames.length) % mPhaseNames.length;
+            phaseOfMoon = String.format(Resource.getLocString(Resource.BUNDLE_LABEL, " %s Moon"), mPhaseNames[mp]);
         }
 
-        servertime = String.format(Resource.getLocString(Resource.BUNDLE_LABEL, fmt), day, hours, mins, nextseason);
-
+        lservertime = String.format(Resource.getLocString(Resource.BUNDLE_LABEL, "Day %d%s"), day, dayOfMonth);
+        mservertime = String.format(Resource.getLocString(Resource.BUNDLE_LABEL, "%02d:%02d"), hours, mins);
+        rservertime = phaseOfMoon;
         if (secintoday >= dewyladysmantletimemin && secintoday <= dewyladysmantletimemax)
-            servertime += Resource.getLocString(Resource.BUNDLE_LABEL, " (Dewy Lady's Mantle)");
+            bservertime = Resource.getLocString(Resource.BUNDLE_LABEL, "(Dewy Lady's Mantle)");
+        /*
         if(night) {
             if (moonid == 128)
                 servertime += Resource.getLocString(Resource.BUNDLE_LABEL, " (New Moon)");
@@ -281,7 +284,11 @@ public class Glob {
                 servertime += Resource.getLocString(Resource.BUNDLE_LABEL, " (Waning Crescent)");
         }else
             servertime += Resource.getLocString(Resource.BUNDLE_LABEL, " (Daytime)");
-        servertimetex = Text.render(servertime).tex();
+        */
+        mservertimetex = Text.render(mservertime).tex();
+        lservertimetex = Text.render(lservertime).tex();
+        rservertimetex = Text.render(rservertime).tex();
+        bservertimetex = Text.render(bservertime).tex();
     }
 
     public void blob(Message msg) {

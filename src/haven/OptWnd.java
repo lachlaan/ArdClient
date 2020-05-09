@@ -28,25 +28,26 @@ package haven;
 
 
 import haven.automation.Discord;
-import haven.purus.Iconfinder;
 import haven.purus.pbot.PBotAPI;
 import haven.purus.pbot.PBotUtils;
 import haven.resutil.BPRadSprite;
 import haven.sloth.gfx.HitboxMesh;
-import haven.sloth.gob.Movable;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.GraphicsEnvironment;
 import java.awt.event.KeyEvent;
-import java.io.IOException;
+import java.io.*;
 import java.net.JarURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.List;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.prefs.BackingStoreException;
 import java.util.stream.Collectors;
+
+import haven.sloth.gob.Movable;
 
 import static haven.DefSettings.*;
 
@@ -56,10 +57,9 @@ public class OptWnd extends Window {
     public static final int HORIZONTAL_MARGIN = 5;
     private static final Text.Foundry fonttest = new Text.Foundry(Text.sans, 10).aa(true);
     public static final int VERTICAL_AUDIO_MARGIN = 5;
-    public final Panel main, video, audio, display, map, general, combat, control, uis,uip, quality, flowermenus, soundalarms, hidesettings, studydesksettings, autodropsettings, keybindsettings, chatsettings, clearboulders, clearbushes, cleartrees, clearhides, additions;
+    public final Panel main, video, audio, display, map, general, combat, control, uis,uip, quality, flowermenus, soundalarms, hidesettings, studydesksettings, autodropsettings, keybindsettings, chatsettings, clearboulders, clearbushes, cleartrees, clearhides;
     public Panel current;
     public CheckBox discordcheckbox, menugridcheckbox;
-    CheckBox sm = null, rm = null, lt = null, bt = null, ltl;
 
     public void chpanel(Panel p) {
         if (current != null)
@@ -99,7 +99,7 @@ public class OptWnd extends Window {
                     itm.selected = false;
                 Utils.setprefchklst("iconssel_" + charname, Config.icons);
             }else
-                chpanel(tgt);
+            chpanel(tgt);
         }
 
         public boolean type(char key, java.awt.event.KeyEvent ev) {
@@ -469,7 +469,6 @@ public class OptWnd extends Window {
         clearbushes = add(new Panel());
         cleartrees = add(new Panel());
         clearhides = add(new Panel());
-        additions = add(new Panel());
 
         initMain(gopts);
         initAudio();
@@ -488,8 +487,7 @@ public class OptWnd extends Window {
         initautodropsettings();
         initkeybindsettings();
         initchatsettings();
-        initAdditions();
-
+        
         chpanel(main);
     }
 
@@ -511,7 +509,6 @@ public class OptWnd extends Window {
         main.add(new PButton(200, "Chat",'c', chatsettings), new Coord(420,120));
         main.add(new PButton(200, "Theme",'t', uip), new Coord(0,150));
         main.add(new PButton(200, "Autodrop", 's', autodropsettings), new Coord(420, 150));
-        main.add(new PButton(200, "Additional settings", 'z', additions), new Coord(0, 180));
         if (gopts) {
             main.add(new Button(200, "Disconnect Discord") {
                 public void click() {
@@ -577,7 +574,7 @@ public class OptWnd extends Window {
                 public void click() {
                     GameUI gui = gameui();
                     if(Discord.jdalogin != null)
-                        gui.DiscordToggle();
+                    gui.DiscordToggle();
                     gui.act("lo", "cs");
                     if (gui != null & gui.map != null)
                         gui.map.canceltasks();
@@ -587,7 +584,7 @@ public class OptWnd extends Window {
                 public void click() {
                     GameUI gui = gameui();
                     if(Discord.jdalogin !=null)
-                        gui.DiscordToggle();
+                    gui.DiscordToggle();
                     gui.act("lo");
                     if (gui != null & gui.map != null)
                         gui.map.canceltasks();
@@ -886,7 +883,7 @@ public class OptWnd extends Window {
     private void initTheme(){
         final WidgetVerticalAppender appender = new WidgetVerticalAppender(withScrollport(uip, new Coord(620, 350)));
         appender.setVerticalMargin(VERTICAL_MARGIN);
-        { //Theme
+           { //Theme
             final IndirRadioGroup<String> rgrp = new IndirRadioGroup<>("Main Hud Theme (requires restart)", HUDTHEME);
             for(final String name : THEMES.get()) {
                 rgrp.add(name, name);
@@ -1317,8 +1314,7 @@ public class OptWnd extends Window {
                 a = val;
             }
         });
-
-        bt = new CheckBox("Miniature trees (req. logout)") {
+        appender.add(new CheckBox("Miniature trees (req. logout)") {
             {
                 a = Config.bonsai;
             }
@@ -1327,48 +1323,8 @@ public class OptWnd extends Window {
                 Utils.setprefb("bonsai", val);
                 Config.bonsai = val;
                 a = val;
-                lt.a = false;
-                Config.largetree = false;
-                ltl.a = false;
-                Config.largetreeleaves = false;
             }
-        };
-
-        lt = new CheckBox("LARP trees (req. logout)") {
-            {
-                a = Config.largetree;
-            }
-
-            public void set(boolean val) {
-                Utils.setprefb("largetree", val);
-                Config.largetree = val;
-                a = val;
-                bt.a = false;
-                Config.bonsai = false;
-                ltl.a = false;
-                Config.largetreeleaves = false;
-            }
-        };
-
-        ltl = new CheckBox("LARP trees w/ leaves (req. logout)") {
-            {
-                a = Config.largetreeleaves;
-            }
-
-            public void set(boolean val) {
-                Utils.setprefb("largetreeleaves", val);
-                Config.largetreeleaves = val;
-                a = val;
-                bt.a = false;
-                Config.bonsai = false;
-                lt.a = false;
-                Config.largetree = false;
-            }
-        };
-        appender.add(lt);
-        appender.add(bt);
-        appender.add(ltl);
-
+        });
         Button OutputSettings = new Button(220, "Output Light Settings to System Tab") {
             @Override
             public void click() {
@@ -1436,11 +1392,6 @@ public class OptWnd extends Window {
         map.add(new Label("Show bushes:"), new Coord(165, 0));
         map.add(new Label("Show trees:"), new Coord(320, 0));
         map.add(new Label("Hide icons:"), new Coord(475, 0));
-        map.add(new Button(200, "Icon update (donotpress)") {
-            public void click() {
-                Iconfinder.updateConfig();
-            }
-        }, new Coord(425, 360));
 
         map.add(new CheckBox("Draw party members/names") {
             {
@@ -1475,7 +1426,7 @@ public class OptWnd extends Window {
                 Config.mapdrawflags = val;
                 a = val;
             }
-        },10,350);
+        },10,350);       
         map.add(new CheckBox("Disable map updating") {
             {
                 a = Config.stopmapupdate;
@@ -1759,6 +1710,28 @@ public class OptWnd extends Window {
             public void set(boolean val) {
                 Utils.setprefb("shooanimals", val);
                 Config.shooanimals = val;
+                a = val;
+            }
+        });
+		appender.add(new CheckBox("Enable navigation tracking") {
+            {
+                a = Config.enableNavigationTracking;
+            }
+
+            public void set(boolean val) {
+                Utils.setprefb("enableNavigationTracking", val);
+                Config.enableNavigationTracking = val;
+                a = val;
+            }
+        });
+        appender.add(new CheckBox("Upload custom GREEN markers to map") {
+            {
+                a = Config.sendCustomMarkers;
+            }
+
+            public void set(boolean val) {
+                Utils.setprefb("sendCustomMarkers", val);
+                Config.sendCustomMarkers = val;
                 a = val;
             }
         });
@@ -2134,7 +2107,7 @@ public class OptWnd extends Window {
                 a = val;
             }
         });
-
+        
         appender.add(new CheckBox("Display skills split into base+bonus") {
             {
                 a = Config.splitskills;
@@ -2245,7 +2218,7 @@ public class OptWnd extends Window {
                 Config.hidecalendar = val;
                 a = val;
                 if(gameui() != null)
-                    gameui().cal.visible = !Config.hidecalendar;
+                gameui().cal.visible = !Config.hidecalendar;
             }
         });
         appender.add(new CheckBox("Close windows with escape key.") {
@@ -2361,16 +2334,16 @@ public class OptWnd extends Window {
             }
         });
         appender.addRow(new CheckBox("Custom interface font (req. restart):") {
-                            {
-                                a = Config.usefont;
-                            }
+            {
+                a = Config.usefont;
+            }
 
-                            public void set(boolean val) {
-                                Utils.setprefb("usefont", val);
-                                Config.usefont = val;
-                                a = val;
-                            }
-                        },
+            public void set(boolean val) {
+                Utils.setprefb("usefont", val);
+                Config.usefont = val;
+                a = val;
+            }
+        },
                 makeFontsDropdown());
         appender.add(new CheckBox("Larger quality/quantity text (req. restart):") {
             {
@@ -2481,99 +2454,16 @@ public class OptWnd extends Window {
             }
         });
         appender.addRow(
-                new Label("Background transparency (req. restart):"),
-                new HSlider(200, 0, 255, Config.qualitybgtransparency) {
-                    public void changed() {
-                        Utils.setprefi("qualitybgtransparency", val);
-                        Config.qualitybgtransparency = val;
-                    }
-                });
+            new Label("Background transparency (req. restart):"),
+            new HSlider(200, 0, 255, Config.qualitybgtransparency) {
+                public void changed() {
+                    Utils.setprefi("qualitybgtransparency", val);
+                    Config.qualitybgtransparency = val;
+                }
+            });
 
         quality.add(new PButton(200, "Back", 27, main), new Coord(210, 360));
         quality.pack();
-    }
-
-    private void initAdditions() {
-        final WidgetVerticalAppender appender = new WidgetVerticalAppender(withScrollport(additions, new Coord(620, 350)));
-
-        appender.setVerticalMargin(VERTICAL_MARGIN);
-        appender.setHorizontalMargin(HORIZONTAL_MARGIN);
-
-        appender.add(new Label("Additional Client Features"));
-        //Test//Test//Test
-
-        appender.add(new CheckBox("Straight cave wall (requires new chunk render)") {
-            {
-                a = Config.straightcavewall;
-            }
-
-            public void set(boolean val) {
-                Utils.setprefb("straightcavewall (requires new chunk render)", val);
-                Config.straightcavewall = val;
-                a = val;
-            }
-        });
-
-        appender.add(new Label(""));
-        appender.add(new Label("One map at a time."));
-
-        rm = new CheckBox("Rawrz Simple Map") {
-            {
-                a = Config.rawrzmap;
-            }
-
-            public void set(boolean val) {
-                Utils.setprefb("rawrzmap", val);
-                Config.rawrzmap = val;
-                a = val;
-                Config.simplemap = false;
-                sm.a = false;
-            }
-        };
-
-        sm = new CheckBox("Simple Map") {
-            {
-                a = Config.simplemap;
-            }
-
-            public void set(boolean val) {
-                Utils.setprefb("simplemap", val);
-                Config.simplemap = val;
-                a = val;
-                Config.rawrzmap = false;
-                rm.a = false;
-            }
-        };
-        appender.add(rm);
-
-        appender.add(new CheckBox("Rawrz Simple Map disable black lines") {
-            {
-                a = Config.disableBlackOutLinesOnMap;
-            }
-
-            public void set(boolean val) {
-                Utils.setprefb("disableBlackOutLinesOnMap", val);
-                Config.disableBlackOutLinesOnMap = val;
-                a = val;
-            }
-        });
-
-        appender.add(sm);
-
-        appender.add(new CheckBox("Map Scale") {
-            {
-                a = Config.mapscale;
-            }
-
-            public void set(boolean val) {
-                Utils.setprefb("mapscale", val);
-                Config.mapscale = val;
-                a = val;
-            }
-        });
-
-        additions.add(new PButton(200, "Back", 27, main), new Coord(210, 360));
-        additions.pack();
     }
 
     private void initFlowermenus() {
@@ -2593,7 +2483,7 @@ public class OptWnd extends Window {
         Utils.loadprefchklist("clustersel", Config.autoclusters);
         for (CheckListboxItem itm : Config.autoclusters.values())
             clusterlist.items.add(itm);
-        // clusterlist.items.addAll(Config.autoclusters.values());
+       // clusterlist.items.addAll(Config.autoclusters.values());
         flowermenus.add(clusterlist, new Coord(150, 20));
 
 
@@ -2608,7 +2498,7 @@ public class OptWnd extends Window {
         Utils.loadprefchklist("flowersel", Config.flowermenus);
         for(CheckListboxItem itm : Config.flowermenus.values())
             flowerlist.items.add(itm);
-        //  flowerlist.items.addAll(Config.flowermenus.values());
+      //  flowerlist.items.addAll(Config.flowermenus.values());
         flowermenus.add(flowerlist, new Coord(0, 20));
 
         flowermenus.add(new PButton(200, "Back", 27, main), new Coord(210, 360));
@@ -2927,13 +2817,13 @@ public class OptWnd extends Window {
         chatsettings.add(new PButton(200, "Back", 27, main), new Coord(210, 360));
         chatsettings.pack();
     }
-
+    
     private void initHideMenu() {
         final WidgetVerticalAppender appender = new WidgetVerticalAppender(withScrollport(hidesettings, new Coord(620, 350)));
 
         appender.setVerticalMargin(VERTICAL_MARGIN);
         appender.setHorizontalMargin(HORIZONTAL_MARGIN);
-
+        
         appender.add(new Label("Toggle bulk hide by pressing the keybind you assign in Keybind Settings"));
         appender.add(new Label("These hides are for all objects of this type, to hide individual ones instead please utilize the alt + right click menu."));
         appender.add(new CheckBox("Hide trees") {
@@ -2993,17 +2883,17 @@ public class OptWnd extends Window {
         appender.add(ColorPreWithLabel("Hidden/Hitbox color: ", HIDDENCOLOR, val ->{
             GobHitbox.fillclrstate = new States.ColState(val);
             HitboxMesh.updateColor(new States.ColState(val));
-            if(ui.sess != null) {
-                ui.sess.glob.oc.changeAllGobs();
-            }
-        }));
+                    if(ui.sess != null) {
+                        ui.sess.glob.oc.changeAllGobs();
+                    }
+    }));
         appender.add(ColorPreWithLabel("Guidelines color: ", GUIDESCOLOR, val ->{
             GobHitbox.bbclrstate = new States.ColState(val);
             TileOutline.color = new States.ColState(
-                    val.getRed(),
-                    val.getGreen(),
-                    val.getBlue(),
-                    (int)(val.getAlpha() * 0.5)
+                val.getRed(), 
+                val.getGreen(),
+                val.getBlue(),
+                (int)(val.getAlpha() * 0.5) 
             );
             if(ui.sess != null) {
                 ui.sess.glob.oc.changeAllGobs();
@@ -3506,7 +3396,7 @@ public class OptWnd extends Window {
         if ((sender == this) && (msg == "close")) {
             hide();
             if(ui.gui != null)
-                setfocus(ui.gui.invwnd);
+            setfocus(ui.gui.invwnd);
         } else {
             super.wdgmsg(sender, msg, args);
         }

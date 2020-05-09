@@ -116,6 +116,7 @@ public class Phong extends ValBlock.Group {
 
         private DoLight() {
             super(VOID, "phong");
+            // super(VOID);
 
             ValBlock.Group tdep = dvals.new Group() {
                 public void cons1() {

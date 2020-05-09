@@ -1,12 +1,9 @@
 package haven.res.lib.globfx;
 
 import haven.*;
-
-import java.lang.ref.Reference;
-import java.lang.ref.WeakReference;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+import java.lang.reflect.*;
+import java.lang.ref.*;
 
 public class GlobEffector extends Drawable {
     /* Keep weak references to the glob-effectors themselves, or
@@ -14,11 +11,11 @@ public class GlobEffector extends Drawable {
      * globs alive through the strong value references forever. */
     static Map<Glob, Reference<GlobEffector>> cur = new WeakHashMap<Glob, Reference<GlobEffector>>();
     public final Glob glob;
-    public Collection<Gob> holder = null;
+    Collection<Gob> holder = null;
     Map<Effect, Effect> effects = new HashMap<Effect, Effect>();
     Map<Datum, Datum> data = new HashMap<Datum, Datum>();
     
-    public GlobEffector(Gob gob) {
+    private GlobEffector(Gob gob) {
     	super(gob);
     	this.glob = gob.glob;
     }

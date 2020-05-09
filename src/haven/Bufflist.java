@@ -32,12 +32,8 @@ import java.util.Collection;
 import java.util.*;
 
 public class Bufflist extends MovableWidget {
-    public static final int margin = 2;
-    public static final int num = 5;
-
-    public interface Managed {
-        public void move(Coord c, double off);
-    }
+    static final int margin = 2;
+    static final int num = 5;
     public final static Resource buffswim = Resource.local().loadwait("gfx/hud/buffs/toggles/swim");
     public final static Resource bufftrack = Resource.local().loadwait("gfx/hud/buffs/toggles/tracking");
     public final static Resource buffcrime = Resource.local().loadwait("gfx/hud/buffs/toggles/crime");
@@ -48,33 +44,25 @@ public class Bufflist extends MovableWidget {
     }
 
     private void arrange(Widget imm) {
-        int i = 0, rn = 0, x = 0, y = 0, maxh = 0;
+        int i = 0;
         Coord br = new Coord();
-        Collection<Pair<Managed, Coord>> mv = new ArrayList<>();
+        Collection<Pair<Buff, Coord>> mv = new ArrayList<>();
         for (Widget wdg = child; wdg != null; wdg = wdg.next) {
-            if(!(wdg instanceof Managed))
+            if (!(wdg instanceof Buff))
                 continue;
-            Managed ch = (Managed)wdg;
-            Coord c = new Coord(x, y);
+            Buff ch = (Buff) wdg;
+            Coord c = new Coord((Buff.cframe.sz().x + margin) * (i % num), (Buff.cframe.sz().y + margin) * (i / num));
             if (ch == imm)
-                wdg.c = c;
+                ch.c = c;
             else
                 mv.add(new Pair<>(ch, c));
             i++;
-            x += wdg.sz.x + margin;
-            maxh = Math.max(maxh, wdg.sz.y);
-            if(++rn >= num) {
-                x = 0;
-                y += maxh + margin;
-                maxh = 0;
-                rn = 0;
-            }
-            if(c.x + wdg.sz.x > br.x) br.x = c.x + wdg.sz.x;
-            if(c.y + wdg.sz.y > br.y) br.y = c.y + wdg.sz.y;
+            if (c.x > br.x) br.x = c.x;
+            if (c.y > br.y) br.y = c.y;
         }
-        resize(br);
+        resize(br.add(Buff.cframe.sz()));
         double off = 1.0 / mv.size(), coff = 0.0;
-        for(Pair<Managed, Coord> p : mv) {
+        for (Pair<Buff, Coord> p : mv) {
             p.a.move(p.b, coff);
             coff += off;
         }
@@ -101,12 +89,7 @@ public class Bufflist extends MovableWidget {
     }
 
     public void draw(GOut g) {
-        for(Widget wdg = child, next; wdg != null; wdg = next) {
-            next = wdg.next;
-            if(!wdg.visible || !(wdg instanceof Managed))
-                continue;
-            wdg.draw(g.reclipl(xlate(wdg.c, true), wdg.sz));
-        }
+        draw(g, false);
     }
 
     public Buff gettoggle(String name) {

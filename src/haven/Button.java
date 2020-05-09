@@ -161,9 +161,7 @@ public class Button extends SIWidget {
     }
 
     public void change(String text) {
-        this.text = nf.render(text);
-        this.cont = this.text.img;
-        redraw();
+        change(text, Color.YELLOW);
     }
 
     public void click() {

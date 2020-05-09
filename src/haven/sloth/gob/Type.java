@@ -9,7 +9,7 @@ import java.util.Map;
 public enum Type {
     PLANT,
     MULTISTAGE_PLANT,
-    HUMAN,
+    PLAYER,
     ANIMAL,
     DANGANIMAL,
     TAMEDANIMAL,

@@ -124,15 +124,15 @@ public class DefSettings {
 	public static final IndirSetting<Boolean> SHOWFKBELT = new IndirSetting<>(global, "belt.fk.show");                       //[Bool] Toggle F key belt
 	public static final IndirSetting<Integer> FKBELTPAGE = new IndirSetting<>(global, "belt.fk.page");                       //[Int] Page F key belt is on
 	public static final IndirSetting<String> FKBELTSTYLE = new IndirSetting<>(global, "belt.fk.style");                      //[String] F key belt style
-	public static final IndirSetting<Boolean> FKBELTLOCK =  new IndirSetting<>(global, "belt.fk.locked");                      //[Bool] Prevent removing icons off F key belt
+    public static final IndirSetting<Boolean> FKBELTLOCK =  new IndirSetting<>(global, "belt.fk.locked");                      //[Bool] Prevent removing icons off F key belt
 	public static final IndirSetting<Boolean> SHOWNPBELT = new IndirSetting<>(global, "belt.np.show");                       //[Bool] Toggle NumPad belt
 	public static final IndirSetting<Integer> NPBELTPAGE = new IndirSetting<>(global, "belt.np.page");                       //[Int] Page F key belt is on
 	public static final IndirSetting<String> NPBELTSTYLE = new IndirSetting<>(global, "belt.np.style");                      //[String] F key belt style
-	public static final IndirSetting<Boolean> NPBELTLOCK =  new IndirSetting<>(global, "belt.np.locked");                      //[Bool] Prevent removing icons off numpad key belt
+    public static final IndirSetting<Boolean> NPBELTLOCK =  new IndirSetting<>(global, "belt.np.locked");                      //[Bool] Prevent removing icons off numpad key belt
 	public static final IndirSetting<Boolean> SHOWNBELT = new IndirSetting<>(global, "belt.n.show");                         //[Bool] Toggle Number belt
 	public static final IndirSetting<Integer> NBELTPAGE = new IndirSetting<>(global, "belt.n.page");                         //[Int] Page F key belt is on
 	public static final IndirSetting<String> NBELTSTYLE = new IndirSetting<>(global, "belt.n.style");                        //[String] F key belt style
-	public static final IndirSetting<Boolean> NBELTLOCK =  new IndirSetting<>(global, "belt.n.locked");                        //[Bool] Prevent removing icons off n key belt
+    public static final IndirSetting<Boolean> NBELTLOCK =  new IndirSetting<>(global, "belt.n.locked");                        //[Bool] Prevent removing icons off n key belt
 	public static final IndirSetting<Boolean> MMSHOWGRID = new IndirSetting<>(global, "minimap.show-grid");                  //[Bool] Toggle minimap grid
 	public static final IndirSetting<Boolean> MMSHOWVIEW = new IndirSetting<>(global, "minimap.show-view");                  //[Bool] Toggle minimap view box
 	public static final IndirSetting<String> CAMERA = new IndirSetting<>(global, "camera.camera-type");                      //[String] Camera type, default: Ortho
@@ -282,9 +282,9 @@ public class DefSettings {
 		SHOWNBELT.ensure(true);
 		NBELTPAGE.ensure(0);
 		NBELTSTYLE.ensure(BeltWnd.Style.HORIZONTAL.toString());
-		FKBELTLOCK.ensure(false);
-		NBELTLOCK.ensure(false);
-		NPBELTLOCK.ensure(false);
+	FKBELTLOCK.ensure(false);
+	NBELTLOCK.ensure(false);
+	NPBELTLOCK.ensure(false);
 		//Minimap
 		MMSHOWGRID.ensure(false);
 		MMSHOWVIEW.ensure(false);
@@ -331,42 +331,42 @@ public class DefSettings {
 
 		//Piggy backing off this to init some other important settings
 		final Optional<Storage> optint = Storage.create("jdbc:sqlite:static.sqlite");
-		if(optint.isPresent()) {
-			Movable.init(optint.get());
+	if(optint.isPresent()) {
+	    Movable.init(optint.get());
 			Alerted.init(optint.get());
 			Deleted.init();
 			Hidden.init();
 			HighlightData.init();
-			//Internal lookups are no longer needed
-			optint.get().close();
-		} else {
-			logger.atSevere().log("Failed to open static datastore");
-			System.exit(0);
-		}
+	    //Internal lookups are no longer needed
+	    optint.get().close();
+	} else {
+	    logger.atSevere().log("Failed to open static datastore");
+	    System.exit(0);
 	}
+    }
 
-	/**
-	 * Users may want to reset all graphics related settings for reasons...
-	 */
-	public static void resetgraphics() {
-		//Custom Graphics
-		SKIPLOADING.set(true);
-		SHOWFLAVOBJS.set(false);
-		SKIPLOADING.set(true);
-		SHOWFLAVOBJS.set(true);
-		SYMMETRICOUTLINES.set(false);
-		SHADOWSQUALITY.set(4);
-		SHADOWSIZE.set(750);
-		MSAALEVEL.set(4);
-		WIREFRAMEMODE.set(false);
-		WEATHER.set(true);
-		ANIMATIONS.set(true);
-		SHOWMAP.set(true);
-		SHOWGOBS.set(true);
-		NIGHTVISION.set(false);
-		FLATWORLD.set(false);
-		SHOWTRANTILES.set(true);
-	}
+		/**
+		 * Users may want to reset all graphics related settings for reasons...
+		 */
+   public static void resetgraphics() {
+	//Custom Graphics
+	SKIPLOADING.set(true);
+	SHOWFLAVOBJS.set(false);
+	SKIPLOADING.set(true);
+	SHOWFLAVOBJS.set(true);
+	SYMMETRICOUTLINES.set(false);
+	SHADOWSQUALITY.set(4);
+	SHADOWSIZE.set(750);
+	MSAALEVEL.set(4);
+	WIREFRAMEMODE.set(false);
+	WEATHER.set(true);
+	ANIMATIONS.set(true);
+	SHOWMAP.set(true);
+	SHOWGOBS.set(true);
+	NIGHTVISION.set(false);
+	FLATWORLD.set(false);
+	SHOWTRANTILES.set(true);
+    }
 }
 
 

@@ -26,14 +26,14 @@
 
 package haven;
 
+import integrations.map.Navigation;
 import java.net.*;
 import java.util.*;
 import java.io.*;
 import java.lang.ref.*;
 
 public class Session implements Resource.Resolver {
-    public static final int PVER = 23;
-
+    public static final int PVER = 21;
 
     public static final int MSG_SESS = 0;
     public static final int MSG_REL = 1;
@@ -513,7 +513,7 @@ public class Session implements Resource.Resolver {
                             }
                             PMessage msg = new PMessage(MSG_SESS);
                             msg.adduint16(2);
-                            msg.addstring("Hafen/ArdClientRevived");
+                            msg.addstring("Hafen/ArdClient");
                             msg.adduint16(PVER);
                             msg.addstring(username);
                             msg.adduint16(cookie.length);
@@ -667,6 +667,7 @@ public class Session implements Resource.Resolver {
         sworker.start();
         ticker = new Ticker();
         ticker.start();
+		Navigation.reset();
 
         Arrays.stream(LOCAL_CACHED).forEach(this::cacheres);
         Config.setUserName(username);

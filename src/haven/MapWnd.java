@@ -34,7 +34,7 @@ import java.awt.event.KeyEvent;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
-
+import integrations.map.RemoteNavigation;
 import haven.BuddyWnd.GroupSelector;
 import haven.MapFile.Marker;
 import haven.MapFile.PMarker;

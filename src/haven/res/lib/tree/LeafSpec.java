@@ -1,7 +1,8 @@
 package haven.res.lib.tree;
 
-import haven.FastMesh;
-import haven.Material;
+import haven.*;
+import haven.res.lib.leaves.*;
+import java.util.*;
 
 public class LeafSpec {
 	public FastMesh mesh;

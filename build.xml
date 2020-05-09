@@ -6,7 +6,7 @@
 
   <target name="build-env">
     <mkdir dir="build" />
-      <mkdir dir="build/lib" />
+      <!-- <mkdir dir="build/lib" /> -->
     <mkdir dir="build/classes" />
     <available property="has-res-jar" file="build/hafen-res.jar" />
     <available property="has-buildinfo" file="build/classes/buildinfo" />
@@ -67,9 +67,9 @@
     <copy todir="build/classes/haven" file="etc/res-preload" />
     <copy todir="build/classes/haven" file="etc/res-bgload" />
     <copy todir="build/classes/haven" file="etc/icon.png" />
-    <copy todir="build" file="etc/grid_ids.txt" />
-      <copy todir="build" file="CHANGELOG.txt" />
-      <copy todir="build" file="lib/static.sqlite" />
+    <!-- <copy todir="build" file="etc/grid_ids.txt" /> -->
+      <!-- <copy todir="build" file="CHANGELOG.txt" /> -->
+      <!-- <copy todir="build" file="lib/static.sqlite" /> -->
   </target>
 
   <target name="lib-classes" depends="build-env" unless="unpacked-lib">
@@ -114,7 +114,7 @@ jackson-core.jar graal-sdk.jar graaljs.jar tregex.jar truffle-api.jar" />
 	</target>
 
 	<target name="custom-jar" depends="custom-encode">
-		<jar basedir="build/custom-res" destfile="build/lib/pasta-res.jar"/>
+		<jar basedir="build/custom-res" destfile="build/pasta-res.jar"/>
 		<delete dir="build/custom-res"/>
 	</target>
 
@@ -127,7 +127,7 @@ jackson-core.jar graal-sdk.jar graaljs.jar tregex.jar truffle-api.jar" />
     </target>
 
   <target name="jars" depends="build-env, jar, res-jar, l10n-jar, custom-jar, scripts">
-    <copy todir="build/lib">
+    <copy todir="build">
       <fileset dir="lib">
 	    <include name="jogl.jar" />
 	    <include name="gluegen-rt.jar" />
@@ -196,7 +196,7 @@ jackson-core.jar graal-sdk.jar graaljs.jar tregex.jar truffle-api.jar" />
   <target name="run" depends="jars">
     <java jar="build/hafen.jar" fork="true" />
   </target>
-  
+
   <target name="clean">
     <delete dir="build" />
   </target>
@@ -204,7 +204,6 @@ jackson-core.jar graal-sdk.jar graaljs.jar tregex.jar truffle-api.jar" />
   <target name="rebuild" depends="clean, jars">
     <copy todir="build/res">
         <fileset dir="custom_res/"/>
-        <fileset dir="custom-res/"/>
     </copy>
   </target>
 
@@ -260,5 +259,4 @@ jackson-core.jar graal-sdk.jar graaljs.jar tregex.jar truffle-api.jar" />
         </java>
         <move file="ver" todir="update"/>
     </target>
-
 </project>

@@ -28,8 +28,6 @@ package haven.resutil;
 
 import haven.*;
 import haven.glsl.*;
-import haven.glsl.Type;
-
 import static haven.glsl.Cons.*;
 import static haven.glsl.Type.*;
 
@@ -38,37 +36,37 @@ public class HueMod extends GLState {
     final float tgthue, huemod, satmod;
 
     public HueMod(float tgthue, float huemod, float satmod) {
-        this.tgthue = tgthue;
-        this.huemod = huemod;
-        this.satmod = satmod;
+	this.tgthue = tgthue;
+	this.huemod = huemod;
+	this.satmod = satmod;
     }
 
     private static final Uniform cxf = new Uniform(VEC3);
     private static final Function apply = new Function.Def(VEC4) {{
-        Expression c = param(PDir.IN, Type.VEC4).ref();
-        LValue t = code.local(VEC3, MiscLib.rgb2hsv.call(pick(c, "rgb"))).ref();
-        Expression th = pick(cxf.ref(), "x");
-        Expression hm = pick(cxf.ref(), "y");
-        Expression hue = fract(add(mul(sub(fract(add(pick(t, "r"), sub(l(1.0 + 0.5), th))), l(0.5)), hm), add(l(1.0), th)));
-        code.add(ass(t, vec3(hue, mul(pick(t, "g"), pick(cxf.ref(), "z")), pick(t, "b"))));
-        code.add(new Return(vec4(MiscLib.hsv2rgb.call(t), pick(c, "a"))));
+	Expression c = param(PDir.IN, Type.VEC4).ref();
+	LValue t = code.local(VEC3, MiscLib.rgb2hsv.call(pick(c, "rgb"))).ref();
+	Expression th = pick(cxf.ref(), "x");
+	Expression hm = pick(cxf.ref(), "y");
+	Expression hue = fract(add(mul(sub(fract(add(pick(t, "r"), sub(l(1.0 + 0.5), th))), l(0.5)), hm), add(l(1.0), th)));
+	code.add(ass(t, vec3(hue, mul(pick(t, "g"), pick(cxf.ref(), "z")), pick(t, "b"))));
+	code.add(new Return(vec4(MiscLib.hsv2rgb.call(t), pick(c, "a"))));
     }};
     private static final ShaderMacro shader = prog -> {
-        prog.fctx.fragcol.mod(apply::call, 1000);
+	prog.fctx.fragcol.mod(apply::call, 1000);
     };
     public ShaderMacro shader() {return(shader);}
 
     public void reapply(GOut g) {
-        g.gl.glUniform3f(g.st.prog.uniform(cxf), tgthue, 1.0f - huemod, satmod);
+	g.gl.glUniform3f(g.st.prog.uniform(cxf), tgthue, 1.0f - huemod, satmod);
     }
 
     public void apply(GOut g) {
-        reapply(g);
+	reapply(g);
     }
 
     public void unapply(GOut g) {}
 
     public void prep(Buffer buf) {
-        buf.put(slot, this);
+	buf.put(slot, this);
     }
 }

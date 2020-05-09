@@ -1,17 +1,11 @@
 package haven.res.lib.leaves;
 
 import haven.*;
-import haven.res.lib.env.Environ;
-import haven.res.lib.globfx.GlobEffect;
-import haven.res.lib.globfx.GlobEffector;
-
-import javax.media.opengl.GL;
-import javax.media.opengl.GL2;
-import java.nio.FloatBuffer;
-import java.nio.ShortBuffer;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
+import java.nio.*;
+import javax.media.opengl.*;
+import haven.res.lib.globfx.*;
+import haven.res.lib.env.*;
 
 public class FallingLeaves extends GlobEffect {
     static final int maxleaves = 10000;
